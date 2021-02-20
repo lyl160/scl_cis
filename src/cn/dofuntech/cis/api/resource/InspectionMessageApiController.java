@@ -105,6 +105,14 @@ public class InspectionMessageApiController extends BaseController {
 		return msg;
 	}*/
 
+    /**
+     * 校务巡查-3种综述
+     * 教师巡查
+     * 护校队巡查
+     * 3个入口的统一新增方法
+     * @param entity
+     * @return
+     */
     @POST
     @Path("/addMessage")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
@@ -158,7 +166,7 @@ public class InspectionMessageApiController extends BaseController {
             entity.setUserName(getUser().getUserName());
             entity.setImgs(imgs.toString());
             entity.setStatus("0");
-            if (entity.getTitle().contains("教师执勤") || entity.getTitle().contains("校务巡查")) {
+            if (entity.getTitle().contains("教师执勤") || entity.getTitle().contains("校务巡查")|| entity.getTitle().contains("护校队巡查")) {
                 entity.setReceiver(1L);
             } else {
                 entity.setReceiver(Long.parseLong(user.getId().toString()));
@@ -185,9 +193,7 @@ public class InspectionMessageApiController extends BaseController {
     @ApiOperation(value = "读取状态变更", notes = "More notes about this method", response = ReturnMsg.class, httpMethod = "POST")
     @ApiResponses(value = {@ApiResponse(message = "无数据", code = 200)})
     public ReturnMsg changeIsread(ImReadLogs entity) {
-
         //读取状态变更 messageid+userid
-
         ReturnMsg msg = new ReturnMsg();
         Long userId = (long) getUser().getId();
         InspectionMessage inspectionMessage = inspectionMessageService.get(entity.getMessageId());
@@ -200,7 +206,11 @@ public class InspectionMessageApiController extends BaseController {
         inspectionMessage.setListimgs(listings);
 
         String title = inspectionMessage.getTitle();
-        inspectionMessage.setTitleDiy(title.substring(title.length() - 4)+"-"+(title.split("-")[1].substring(0,title.split("-")[1].length()-4)));
+        if (title.contains("护校队巡查")) {
+            inspectionMessage.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
+        } else {
+            inspectionMessage.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
+        }
 
         try {
             log.info("综述已读，变更开始...");
@@ -322,7 +332,11 @@ public class InspectionMessageApiController extends BaseController {
             inspectionMessage.setListimgs(listings);
 
             String title = inspectionMessage.getTitle();
-            inspectionMessage.setTitleDiy(title.substring(title.length() - 4)+"-"+(title.split("-")[1].substring(0,title.split("-")[1].length()-4)));
+            if (title.contains("护校队巡查")) {
+                inspectionMessage.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
+            } else {
+                inspectionMessage.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
+            }
 
             //查询所有（阅读人数统计）  用messageid
             List<ImReadLogs> alllogs = imReadLogsService.query(map);
@@ -343,42 +357,46 @@ public class InspectionMessageApiController extends BaseController {
     @GET
     @Path("/list")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
-    @ApiOperation(value = "校长一日综述消息查看", notes = "More notes about this method", response = ReturnMsg.class, httpMethod = "GET")
+    @ApiOperation(value = "管理员右上角巡查消息列表", notes = "More notes about this method", response = ReturnMsg.class, httpMethod = "GET")
     @ApiResponses(value = {@ApiResponse(message = "无数据", code = 200)})
     public ReturnMsg list() {
         ReturnMsg msg = new ReturnMsg();
         String schoolId = getUser().getAgentId();
         try {
-            Map<String, Object> map = new HashMap<String, Object>();
-            Map<String, Object> map2 = new HashMap<String, Object>();
+            Map<String, Object> messageParam = new HashMap<String, Object>();
+            Map<String, Object> dictParam = new HashMap<String, Object>();
             if (schoolId.equals("1")) {
-                map2.put("dictName", "国际人员");
+                dictParam.put("dictName", "国际人员");
             } else if (schoolId.equals("2")) {
-                map2.put("dictName", "阳光人员");
+                dictParam.put("dictName", "阳光人员");
             } else if (schoolId.equals("3")) {
-                map2.put("dictName", "CBD人员");
+                dictParam.put("dictName", "CBD人员");
             }
             //查询
-            Dict dict = dictService.get(map2);
+            Dict dict = dictService.get(dictParam);
             UserInf user = new UserInf();
             user.setUserName(dict.getDictValue());
             user = userService.getEntity(user);
             Timestamp date = new Timestamp(System.currentTimeMillis());
             SimpleDateFormat s1 = new SimpleDateFormat("yyyy-MM-dd");
 
-            map.put("addTime", s1.format(date));
-            map.put("schoolId", getUser().getAgentId());
+            messageParam.put("addTime", s1.format(date));
+            messageParam.put("schoolId", getUser().getAgentId());
             if (getUser().getId().equals(user.getId())) {
-                map.put("receiver", getUser().getId());
+                messageParam.put("receiver", getUser().getId());
             } else {
-                map.put("receiver", "1");
+                messageParam.put("receiver", "1");
             }
             //查询今日所有
-            List<InspectionMessage> alllogs = inspectionMessageService.queryAll(map);
+            List<InspectionMessage> alllogs = inspectionMessageService.queryAll(messageParam);
             String title;
             for (InspectionMessage message : alllogs) {
                 title = message.getTitle();
-                message.setTitleDiy(title.substring(title.length() - 4)+"-"+(title.split("-")[1].substring(0,title.split("-")[1].length()-4)));
+                if (title.contains("护校队巡查")) {
+                    message.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
+                } else {
+                    message.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
+                }
             }
 
             msg.setObj(alllogs);
@@ -414,7 +432,11 @@ public class InspectionMessageApiController extends BaseController {
             for (ImReadLogs readLog : alllogs) {
                 InspectionMessage message = inspectionMessageService.get(readLog.getMessageId());
                 String title = message.getTitle();
-                message.setTitleDiy(title.substring(title.length() - 4)+"-"+(title.split("-")[1].substring(0,title.split("-")[1].length()-4)));
+                if (title.contains("护校队巡查")) {
+                    message.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
+                } else {
+                    message.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
+                }
                 readLog.setInspectionMessage(message);
             }
             map.put("allcount", alllogs);
@@ -429,7 +451,7 @@ public class InspectionMessageApiController extends BaseController {
     @GET
     @Path("/getOne")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
-    @ApiOperation(value = "查询指定通报人", notes = "More notes about this method", response = ReturnMsg.class, httpMethod = "GET")
+    @ApiOperation(value = "查询指定通告人", notes = "More notes about this method", response = ReturnMsg.class, httpMethod = "GET")
     @ApiResponses(value = {@ApiResponse(message = "无数据", code = 200)})
     public ReturnMsg getOne() {
         ReturnMsg msg = new ReturnMsg();
@@ -450,8 +472,8 @@ public class InspectionMessageApiController extends BaseController {
             user = userService.getEntity(user);
             msg.setObj(user.getId());
         } catch (Exception e) {
-            msg.setFail("查询指定通报人，异常:" + e.getMessage());
-            log.error("查询指定通报人，{}", e.getMessage(), e);
+            msg.setFail("查询指定通告人，异常:" + e.getMessage());
+            log.error("查询指定通告人，{}", e.getMessage(), e);
         }
         return msg;
     }

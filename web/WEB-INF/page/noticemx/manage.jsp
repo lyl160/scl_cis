@@ -11,7 +11,7 @@
 							<div class="search_elm" style="margin-left: 0px">
 								<label class="label_search">关键字:</label>
 								<div class="search_input">
-									<input id="keyword" type="text" name="keyword" placeholder="请输入通报明细名称">
+									<input id="keyword" type="text" name="keyword" placeholder="请输入通告明细名称">
 								</div>
 							</div>
 							<div class="search_button">
@@ -108,7 +108,7 @@
 	function noticeMxAdd() {
 		openDialog({
 			dialogId : 'dlg-role',
-			title : '新增通报明细',
+			title : '新增通告明细',
 			pageUrl : 'noticeMx/add/view',
 			width : '500px',
 		    height:'350px'
@@ -128,7 +128,7 @@
 		}
         openDialog({
             dialogId : 'dlg-role',
-            title : '编辑通报明细',
+            title : '编辑通告明细',
             pageUrl :'noticeMx/edit/view?id='+rows,
             width :'500px',
             height:'350px',

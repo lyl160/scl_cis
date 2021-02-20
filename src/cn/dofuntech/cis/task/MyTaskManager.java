@@ -667,13 +667,13 @@ public class MyTaskManager {
     }
 
     /**
-     * 每天6点到18点 偏移2分钟 每5分钟执行一次,查看是否巡查超时并通报(教师执勤)
-     * 任务开始后，2分钟未打卡的，系统自动通报（通报消息集中一条发出） 通报给当日值班校务巡查的老师
+     * 每天6点到18点 偏移2分钟 每5分钟执行一次,查看是否巡查超时并通告(教师执勤)
+     * 任务开始后，2分钟未打卡的，系统自动通告（通告消息集中一条发出） 通告给当日值班校务巡查的老师
      */
     @Scheduled(cron = "0 2/5 6-18 * * ? ")
     public void jiaoshiNoticeMx() throws Exception {
-        logger.info("教师执勤未到岗通报...");
-        logger.info("每天6点到18点每隔5分钟，自动通报...");
+        logger.info("教师执勤未到岗通告...");
+        logger.info("每天6点到18点每隔5分钟，自动通告...");
 
         Timestamp nowDate = new Timestamp((System.currentTimeMillis() / 1000) * 1000);
         Date before2minuteDate = new Date(nowDate.getTime() - 120000);//120秒（2分钟）之前的日期
@@ -715,13 +715,13 @@ public class MyTaskManager {
                             messageParam.put("schoolId", schedule.getSchoolId());
                             List<InspectionMessage> messageList = inspectionMessageService.query(messageParam);
                             if (messageList != null && messageList.size() > 0) {
-                                //查询存在执勤消息，如果已经执勤了，就不再推通知消息了
-                                logger.debug("用户：{},已经执勤，无需通报", userInfo.getUserName());
+                                //查询存在执勤消息，如果已经执勤了，就不再推通告消息了
+                                logger.debug("用户：{},已经执勤，无需通告", userInfo.getUserName());
                                 continue;
                             } else {
                                 //如果还没有执勤消息
-                                //检查是否已经通报过
-                                //如果已经通报过，则不再通报
+                                //检查是否已经通告过
+                                //如果已经通告过，则不再通告
                                 Map noticeMxParam = new HashMap();
                                 noticeMxParam.put("startTime", category.getStartTime());
                                 noticeMxParam.put("endTime", category.getEndTime());
@@ -731,14 +731,14 @@ public class MyTaskManager {
                                 noticeMxParam.put("templateName", "教师执勤");
                                 List noticeMxList = noticeMxService.query(noticeMxParam);
                                 if (noticeMxList != null && noticeMxList.size() > 0) {
-                                    logger.debug("用户：{}没有执勤消息,已经通报过，无需再次通报", userInfo.getUserName());
+                                    logger.debug("用户：{}没有执勤消息,已经通告过，无需再次通告", userInfo.getUserName());
                                     continue;
                                 }
-                                //如果还没通报过，则加入通报名单
+                                //如果还没通告过，则加入通告名单
                                 Map placeParam = new HashMap();
                                 placeParam.put("userId", userInfo.getId());
                                 Place place = placeService.get(placeParam);
-                                //加入到通报明细
+                                //加入到通告明细
                                 NoticeMx noticeMx = new NoticeMx();
                                 noticeMx.setUserName(userInfo.getUserName());
                                 noticeMx.setDutyDate(schedule.getDutyDate());
@@ -756,14 +756,14 @@ public class MyTaskManager {
                             }
 
                         }
-                        //存在通报消息
+                        //存在通告消息
                         if (StringUtils.isNotEmpty(teacherName.toString())) {
                             StringBuffer noticeContent = new StringBuffer();
                             noticeContent.append("在今日")
                                     .append(timeContent.toString())
                                     .append(teacherName.toString().substring(0, teacherName.length() - 1))
-                                    .append("未按照规定时间到岗，予以通报");
-                            //将本分类的未到岗教师名单 通报给今天进行校务巡查的排班人员
+                                    .append("未按照规定时间到岗，予以通告");
+                            //将本分类的未到岗教师名单 通告给今天进行校务巡查的排班人员
                             Map<String, Object> XWscheduleParam = new HashMap();
                             XWscheduleParam.put("dutyDate", sdf.format(nowDate));
                             XWscheduleParam.put("templateName", "校务巡查");
@@ -773,7 +773,7 @@ public class MyTaskManager {
                                 List<UserInf> XWuserInfoList = scheduleService.getTeachersBySchedule(XWschedule);
                                 for (UserInf XWUserinfo : XWuserInfoList) {
                                     Notice notice = new Notice();
-                                    notice.setTitle("通报");
+                                    notice.setTitle("通告");
                                     notice.setContent(noticeContent.toString());
                                     notice.setType("1");//值班提醒
                                     notice.setUserId(XWUserinfo.getId() + 0L);
@@ -783,7 +783,7 @@ public class MyTaskManager {
                                     notice.setDutyDate(schedule.getDutyDate());
                                     notice.setSchoolId(schedule.getSchoolId());
                                     noticeService.insert(notice);
-                                    logger.debug("给用户：{}，发送通报消息{}", XWUserinfo.getUserName(), noticeContent.toString());
+                                    logger.debug("给用户：{}，发送通告消息{}", XWUserinfo.getUserName(), noticeContent.toString());
                                 }
                             }
                         }
@@ -798,13 +798,13 @@ public class MyTaskManager {
 
 
     /**
-     * 每天6点到18点 偏移2分钟5秒  每5分钟执行一次,查看是否巡查超时并通报(护校队巡查)
-     * 通报给指定用户
+     * 每天6点到18点 偏移2分钟5秒  每5分钟执行一次,查看是否巡查超时并通告(护校队巡查)
+     * 通告给指定用户
      */
     @Scheduled(cron = "5 2/5 6-18 * * ? ")
     public void huxiaoduiNoticeMx() throws Exception {
-        logger.info("护校队执勤未到岗通报...");
-        logger.info("每天6点到18点，每隔5分钟，自动通报...");
+        logger.info("护校队执勤未到岗通告...");
+        logger.info("每天6点到18点，每隔5分钟，自动通告...");
 
         Timestamp nowDate = new Timestamp((System.currentTimeMillis() / 1000) * 1000);
         Date before2minuteDate = new Date(nowDate.getTime() - 120000);//120秒（2分钟）之前的日期
@@ -823,7 +823,7 @@ public class MyTaskManager {
                 //要值班的用户
                 List<UserInf> userList = scheduleService.getTeachersBySchedule(schedule);
 
-                //通报给该用户
+                //通告给该用户
                 Map dictParam = new HashMap();
                 if (schedule.getSchoolId() == 1) {
                     dictParam.put("dictName", "国际人员");
@@ -860,13 +860,13 @@ public class MyTaskManager {
                             messageParam.put("schoolId", schedule.getSchoolId());
                             List<InspectionMessage> messageList = inspectionMessageService.query(messageParam);
                             if (messageList != null && messageList.size() > 0) {
-                                //查询存在执勤消息，如果已经执勤了，则不再通报
-                                logger.debug("用户：{},已经执勤，无需通报", userInfo.getUserName());
+                                //查询存在执勤消息，如果已经执勤了，则不再通告
+                                logger.debug("用户：{},已经执勤，无需通告", userInfo.getUserName());
                                 continue;
                             } else {
                                 //如果还没有执勤消息
-                                //检查是否已经通报过
-                                //如果已经通报过，则不再通报
+                                //检查是否已经通告过
+                                //如果已经通告过，则不再通告
                                 Map noticeMxParam = new HashMap();
                                 noticeMxParam.put("startTime", category.getStartTime());
                                 noticeMxParam.put("endTime", category.getEndTime());
@@ -876,15 +876,15 @@ public class MyTaskManager {
                                 noticeMxParam.put("templateName", "护校队巡查");
                                 List noticeMxList = noticeMxService.query(noticeMxParam);
                                 if (noticeMxList != null && noticeMxList.size() > 0) {
-                                    logger.debug("用户：{}没有执勤消息,已经通报过，无需再次通报", userInfo.getUserName());
+                                    logger.debug("用户：{}没有执勤消息,已经通告过，无需再次通告", userInfo.getUserName());
                                     continue;
                                 }
 
-                                //如果还没通报过，则加入通报名单
+                                //如果还没通告过，则加入通告名单
                                 Map placeParam = new HashMap();
                                 placeParam.put("userId", userInfo.getId());
                                 Place place = placeService.get(placeParam);
-                                //加入到通报明细
+                                //加入到通告明细
                                 NoticeMx noticeMx = new NoticeMx();
                                 noticeMx.setUserName(userInfo.getUserName());
                                 noticeMx.setDutyDate(schedule.getDutyDate());
@@ -901,16 +901,16 @@ public class MyTaskManager {
                                 noticeMxService.insert(noticeMx);
                             }
                         }
-                        //存在通报消息
+                        //存在通告消息
                         if (StringUtils.isNotEmpty(teacherName.toString())) {
                             StringBuffer noticeContent = new StringBuffer();
                             noticeContent.append("在今日")
                                     .append(timeContent.toString())
                                     .append(teacherName.toString().substring(0, teacherName.length() - 1))
-                                    .append("未按照规定时间到岗，予以通报");
-                            //将本分类的未到岗教师名单 通报给字典表指定用户
+                                    .append("未按照规定时间到岗，予以通告");
+                            //将本分类的未到岗教师名单 通告给字典表指定用户
                             Notice notice = new Notice();
-                            notice.setTitle("通报");
+                            notice.setTitle("通告");
                             notice.setContent(noticeContent.toString());
                             notice.setType("1");//值班提醒
                             notice.setUserId(noticeToUser.getId() + 0L);
@@ -920,7 +920,7 @@ public class MyTaskManager {
                             notice.setDutyDate(schedule.getDutyDate());
                             notice.setSchoolId(schedule.getSchoolId());
                             noticeService.insert(notice);
-                            logger.debug("给用户：{}，发送通报消息{}", noticeToUser.getUserName(), noticeContent.toString());
+                            logger.debug("给用户：{}，发送通告消息{}", noticeToUser.getUserName(), noticeContent.toString());
                         }
                     }
                 }

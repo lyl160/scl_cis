@@ -39,7 +39,7 @@
         <div id="grid-pager"></div>
         <div style="margin-top: 10px">
             <span><a class="btn btn-small btn-add" onclick="studentBillExport();">导出教师巡查数据</a></span>
-            <span><a class="btn btn-small btn-add" onclick="studentBillExport2();">导出通报明细</a></span>
+            <span><a class="btn btn-small btn-add" onclick="studentBillExport2();">导出通告明细</a></span>
             <span id="paging_bar" style="float: right"> </span>
         </div>
     </div>
@@ -200,7 +200,7 @@
 
     function studentBillExport2() {
         msg.confirm({
-            title: '确认', position: 'center', msg: '您确定要导出通报明细吗？', call: function (ok) {
+            title: '确认', position: 'center', msg: '您确定要导出通告明细吗？', call: function (ok) {
                 if (ok) {
                     window.location.href = "inspectionMessage/msgExport?templateName=教师执勤&" + $("form").serialize();
                 }
