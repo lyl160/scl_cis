@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.InspectionCategoryMapper">
+
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="value != null and value != ''">
+			  and t.value   like  CONCAT('%',#{value},'%')
+			</if>
+			<if test="ilevel != null and ilevel != ''">
+			  and t.ilevel = #{ilevel}
+			</if>
+			<if test="pid1 != null and pid1 != ''">
+			  and t.pid1 = #{pid1}
+			</if>
+			<if test="pid2 != null and pid2 != ''">
+			  and t.pid2 = #{pid2}
+			</if>
+			<if test="pid3 != null and pid3 != ''">
+			  and t.pid3 = #{pid3}
+			</if>
+			<if test="img != null and img != ''">
+			  and t.img = #{img}
+			</if>
+			<if test="status != null and status != ''">
+			  and t.status = #{status}
+			</if>
+			<if test="seq != null and seq != ''">
+			  and t.seq = #{seq}
+			</if>
+			<if test="templateId != null and templateId != ''">
+			  and t.template_id = #{templateId}
+			</if>
+			<if test="schoolId != null and schoolId != ''">
+			  and t.school_id = #{schoolId}
+			</if>
+			<if test="addTime != null and addTime != ''">
+			  and t.add_time = #{addTime}
+			</if>
+			<if test="editTime != null and editTime != ''">
+			  and t.edit_time = #{editTime}
+			</if>
+			<if test="startTime != null and startTime != ''">
+			  and t.start_time = #{startTime}
+			</if>
+			<if test="endTime != null and endTime != ''">
+			  and t.end_time = #{endTime}
+			</if>
+			<if test="templateName != null and templateName != ''">
+			  and tt.name = #{templateName}
+			</if>
+	</sql>
+
+    <sql id="columns">
+    	t.id, t.value, t.ilevel, t.pid1, t.pid2, t.pid3, t.img, t.status, t.seq, t.template_id, t.school_id, t.add_time, t.edit_time,t.start_time,t.end_time,t.users,t.users_name,t.diy_time
+    </sql>
+
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
+		INSERT INTO t_inspection_category (
+			id, value, ilevel, pid1, pid2, pid3, img, status, seq, template_id, school_id, add_time, edit_time,start_time,end_time,users,users_name,diy_time
+		) VALUES (
+			#{id}, #{value}, #{ilevel}, #{pid1}, #{pid2}, #{pid3}, #{img}, #{status}, #{seq}, #{templateId}, #{schoolId}, #{addTime}, #{editTime}, #{startTime}, #{endTime},#{users},#{usersName},#{diyTime}
+		)
+	</insert>
+
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
+		SELECT
+		<include refid="columns"/>,
+		tt.name AS  value1
+		FROM t_inspection_category t
+		LEFT JOIN t_inspection_template tt on tt.id = t.template_id
+	</select>
+
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
+		SELECT
+		<include refid="columns"/>,
+		tt.name AS  value1,
+		ts.school_name AS schoolname
+		FROM t_inspection_category t
+		LEFT JOIN t_inspection_template tt on tt.id = t.template_id
+		LEFT JOIN t_school_inf ts ON ts.id=t.school_id
+		<where>
+		<include refid="condition" />
+		<if test="name!= null and name!= ''">
+			  and tt.name = #{name}
+		</if>
+			<!--<if test="nowTime!= null and nowTime!= ''">-->
+			<!--and STR_TO_DATE(t.start_time,'%H:%i') <![CDATA[ <= ]]> STR_TO_DATE(#{nowTime},'%H:%i')-->
+			<!--and STR_TO_DATE(t.end_time,'%H:%i') <![CDATA[ >= ]]> STR_TO_DATE(#{nowTime},'%H:%i')-->
+			<!--</if>-->
+			<!--<if test="nowTime2!= null and nowTime2!= ''">-->
+			<!--and STR_TO_DATE(t.end_time,'%H:%i') <![CDATA[ >= ]]> STR_TO_DATE(#{nowTime2},'%H:%i')-->
+			<!--</if>-->
+			<!--<if test="nowTime3!= null and nowTime3!= ''">-->
+			<!--and TIMEDIFF(t.start_time,#{nowTime3}) = STR_TO_DATE('00:05','%H:%i')-->
+			<!--</if>-->
+			<!--<if test="nowTime4!= null and nowTime4!= ''">-->
+			<!--and TIMEDIFF(#{nowTime4},t.end_time) = STR_TO_DATE('00:05','%H:%i')-->
+			<!--</if>-->
+		</where>
+        order by t.template_id,if(t.pid1=0,t.id,t.pid1)*1000+t.id <!-- 为了让父子分类显示在一起-->
+	</select>
+
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
+		SELECT
+		<include refid="columns"/>
+		FROM t_inspection_category t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
+		UPDATE t_inspection_category 
+		SET
+		id=#{id}, value=#{value}, ilevel=#{ilevel}, pid1=#{pid1}, pid2=#{pid2}, pid3=#{pid3}, img=#{img}, status=#{status}, seq=#{seq}, template_id=#{templateId}, school_id=#{schoolId}, add_time=#{addTime}, edit_time=#{editTime}, start_time=#{startTime}, end_time=#{endTime},users=#{users},users_name=#{usersName},diy_time=#{diyTime}
+		WHERE
+		id=#{id}
+	</update>
+
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
+		DELETE FROM t_inspection_category 
+		WHERE
+		id=#{id}
+	</delete>
+
+</mapper>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.ScheduleMapper">
+	
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="templateId != null and templateId != ''">
+			  and t.template_id = #{templateId}
+			</if>
+			<if test="users != null and users != ''">
+			  and t.users = #{users}
+			</if>
+			<if test="dutyDate != null and dutyDate != ''">
+			  and t.duty_date = #{dutyDate}
+			</if>
+			<if test="week != null and week != ''">
+			  and t.week = #{week}
+			</if>
+			<if test="addtime != null and addtime != ''">
+			  and t.addtime = #{addtime}
+			</if>
+			<if test="edittime != null and edittime != ''">
+			  and t.edittime = #{edittime}
+			</if>
+			<if test="schoolId != null and schoolId != ''">
+			  and t.school_id  = #{schoolId}
+			</if>
+			<if test="templateName != null and templateName != ''">
+			  and a.name  = #{templateName}
+			</if>
+	</sql>
+	
+    <sql id="columns">
+    	t.id, t.template_id, t.users, t.duty_date, t.week, t.addtime, t.edittime,t.school_id
+    </sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.Schedule">
+		INSERT INTO t_schedule (
+			id, template_id, users, duty_date, week, addtime, edittime,
+		school_id) VALUES (
+			#{id}, #{templateId}, #{users}, #{dutyDate} , #{week}, #{addtime}, #{edittime},#{schoolId}
+		)
+	</insert>
+	
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.Schedule">
+		SELECT
+		<include refid="columns"/>
+		FROM t_schedule t
+	</select>
+	
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.Schedule">
+		SELECT
+		<include refid="columns"/>,a.name templateName
+		FROM t_schedule t
+		LEFT JOIN t_inspection_template a ON t.template_id =  a.id
+		<where>
+		<include refid="condition" />
+		</where>
+        order by duty_date desc
+	</select>
+	
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.Schedule">
+		SELECT
+		<include refid="columns"/>,a.name templateName
+		FROM t_schedule t
+		LEFT JOIN t_inspection_template a ON t.template_id =  a.id
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+	
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.Schedule">
+		UPDATE t_schedule 
+		SET
+		id=#{id}, template_id=#{templateId}, users=#{users}, duty_date=#{dutyDate}, week=#{week}, addtime=#{addtime}, edittime=#{edittime},school_id  = #{schoolId}
+		WHERE
+		id=#{id}
+	</update>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.Schedule">
+		DELETE FROM t_schedule 
+		WHERE
+		id=#{id}
+	</delete>
+	
+	<!-- 查询老师-->
+	<select id="getTeachers" parameterType="hashmap" resultType="java.lang.String">
+		SELECT GROUP_CONCAT(t.USER_NAME) usersName
+		FROM auth_user_inf t 
+		WHERE t.id IN (${users})
+	</select>
+	
+</mapper>

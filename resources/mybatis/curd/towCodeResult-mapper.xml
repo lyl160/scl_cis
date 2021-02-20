@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.TowCodeResultMapper">
+	
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="createTime != null and createTime != ''">
+			  and t.create_time = #{createTime}
+			</if>
+			<if test="twoText != null and twoText != ''">
+			  and t.two_text = #{twoText}
+			</if>
+			<if test="twoId != null and twoId != ''">
+			  and t.two_id = #{twoId}
+			</if>
+			<if test="uid != null and uid != ''">
+			  and t.uid = #{uid}
+			</if>
+	</sql>
+	
+    <sql id="columns">
+    	t.id, t.create_time, t.two_text, t.two_id,t.uid
+    </sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.TowCodeResult">
+		INSERT INTO t_tow_code_result (
+			id, create_time, two_text, two_id,uid
+		) VALUES (
+			#{id}, #{createTime}, #{twoText}, #{twoId},#{uid}
+		)
+	</insert>
+	
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.TowCodeResult">
+		SELECT
+		<include refid="columns"/>
+		FROM t_tow_code_result t
+	</select>
+	
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.TowCodeResult">
+		SELECT
+		<include refid="columns"/>
+		FROM t_tow_code_result t
+		<where>
+		<include refid="condition" />
+		</where>
+	</select>
+	
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.TowCodeResult">
+		SELECT
+		<include refid="columns"/>
+		FROM t_tow_code_result t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+	
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.TowCodeResult">
+		UPDATE t_tow_code_result 
+		SET
+		id=#{id}, create_time=#{createTime}, two_text=#{twoText}, two_id=#{twoId}
+		WHERE
+		id=#{id}
+	</update>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.TowCodeResult">
+		DELETE FROM t_tow_code_result 
+		WHERE
+		id=#{id}
+	</delete>
+	
+</mapper>

@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+	id="WebApp_ID" version="3.1">
+	<display-name>scl_cis</display-name>
+
+	<!-- Static Resources -->
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>*.html</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>/attachment/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>/static/*</url-pattern>
+	</servlet-mapping>
+
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	<!-- 解决跨域问题的过滤器 -->
+	<filter>
+		<filter-name>corsFilter</filter-name>
+		<filter-class>cn.dofuntech.filter.CorsFilter</filter-class>
+		<init-param>
+			<param-name>allowOrigin</param-name>
+			<param-value>*</param-value>
+		</init-param>
+		<init-param>
+			<param-name>allowMethods</param-name>
+			<param-value>GET,POST,PUT,DELETE,OPTIONS</param-value>
+		</init-param>
+		<init-param>
+			<param-name>allowCredentials</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>allowHeaders</param-name>
+			<param-value>Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With,userId,token</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>corsFilter</filter-name>
+		<url-pattern>/api/*</url-pattern>
+	</filter-mapping>
+
+	<!-- 登录拦截 -->
+	<!-- <filter>
+		<filter-name>AuthorFilter</filter-name>
+		<filter-class>cn.dofuntech.cis.admin.filter.AuthorizationFilter</filter-class>
+		<init-param>
+			<param-name>initParam</param-name>
+			<param-value>adminid</param-value>
+		</init-param>
+		<init-param>
+			<param-name>loginUrl</param-name>
+			<param-value>login.do</param-value>
+		</init-param>
+		<init-param>
+			<param-name>ignore</param-name>
+			<param-value>/login.do,/getvm.do</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>AuthorFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping> -->
+
+	<!-- Bootstraps the root web application context before servlet initialization -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	<!-- 加载数据字典  在Spring配置的下面-->
+    <listener>
+       <listener-class>cn.dofuntech.listener.InitDictListener</listener-class>
+    </listener>
+    
+     <!-- SSO单点登出监听器和过滤器 -->
+	<listener>
+	    <listener-class>com.iflytek.edu.ew.session.SingleSignOutHttpSessionListener</listener-class>
+	</listener>
+	<filter>
+	    <filter-name>SSO Logout Filter</filter-name>
+	    <filter-class>com.iflytek.edu.ew.session.SingleSignOutFilter</filter-class>
+	</filter>
+	<filter-mapping>
+	    <filter-name>SSO Logout Filter</filter-name>
+	    <url-pattern>/logout</url-pattern>
+	</filter-mapping>
+	
+	<!-- SSO单点登录认证filter -->
+	<filter>
+	    <filter-name>SSO Authentication Filter</filter-name>
+	    <filter-class>com.iflytek.edu.ew.authentication.AuthenticationFilter</filter-class>
+	    <init-param>
+	        <!-- SSO服务器地址 -->
+	        <param-name>SSOServerUrl</param-name>
+	        <param-value>http://open.whhlj.com/sso </param-value>
+	    </init-param>
+	    <init-param>
+	        <!-- 统一登录地址 -->
+	        <param-name>SSOLoginUrl</param-name>
+	        <param-value>http://whhlj.com/desktop-web/login.action</param-value>
+	    </init-param>
+	    <init-param>
+	        <!-- 应用服务器地址, 域名或者[http://|https://]{ip}:{port} -->
+	        <param-name>serverName</param-name>
+	        <param-value>http://localhost:8080</param-value>
+	    </init-param>
+	    <init-param>
+	        <!-- 除了openId，是否需要返回loginName以及userId等更多信息 -->
+	        <param-name>needAttribute</param-name>
+	        <param-value>true</param-value>
+	    </init-param>
+	    <init-param>
+	        <!-- 可选，不需要单点登录的页面，多个页面以英文逗号分隔，支持正则表达式形式 -->
+	        <!-- 例如：/abc/.*\.jsp,/.*/index\.jsp -->
+	        <param-name>excludedURLs</param-name>
+	        <param-value>/index\.html,/logout,/api/.*,/static/.*</param-value>
+	    </init-param>
+	    <init-param>
+	        <param-name>appKey</param-name>
+	        <param-value>7a76c23a33254036b78761754356f6c0</param-value>
+	    </init-param>
+	</filter>
+	
+	<filter-mapping>
+	    <filter-name>SSO Authentication Filter</filter-name>
+	    <url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	<!-- SSO ticket验证filter -->
+	<filter>
+	    <filter-name>SSO Ticket Validation Filter</filter-name>
+	    <filter-class>com.iflytek.edu.ew.validation.Cas20ProxyReceivingTicketValidationFilter</filter-class>
+	    <init-param>
+	        <!-- 应用服务器地址, 域名或者[http://|https://]{ip}:{port} -->
+	        <param-name>serverName</param-name>
+	        <param-value>http://localhost:8080</param-value>
+	    </init-param>
+	    <init-param>
+	        <!-- 除了openId，是否需要返回loginName以及userId等更多信息 -->
+	        <param-name>needAttribute</param-name>
+	        <param-value>true</param-value>
+	    </init-param>
+	    <init-param>
+	        <!-- SSO服务器地址前缀，用于生成验证地址，和SSOServerUrl保持一致 -->
+	        <param-name>SSOServerUrlPrefix</param-name>
+	        <param-value>http://open.whhlj.com/sso </param-value>
+	    </init-param>
+	    <init-param>
+	        <param-name>appKey</param-name>
+	        <param-value>7a76c23a33254036b78761754356f6c0</param-value>
+	    </init-param>
+	</filter>
+	
+	<filter-mapping>
+	    <filter-name>SSO Ticket Validation Filter</filter-name>
+	    <url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	<!-- SSO Assertion过滤器，用于获取认证用户信息 -->
+	<filter>
+	    <filter-name>CAS Assertion Thread Local Filter</filter-name>
+	    <filter-class>com.iflytek.edu.ew.util.AssertionThreadLocalFilter</filter-class>
+	</filter>
+	
+	<filter-mapping>
+	    <filter-name>CAS Assertion Thread Local Filter</filter-name>
+	    <url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+
+	<!-- needed for ContextLoaderListener -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:spring-config.xml,classpath:activemq.xml</param-value>
+	</context-param>
+	
+	<!-- 配置图片验证码 -->
+	<servlet>
+		<servlet-name>validatecode</servlet-name>
+		<servlet-class>cn.dofuntech.core.web.servlet.ValidateNumbeByCookies</servlet-class>
+		<init-param>
+			<param-name>type</param-name>
+			<param-value>1</param-value>
+		</init-param>
+		<init-param>
+			<param-name>width</param-name>
+			<param-value>90</param-value>
+		</init-param>
+		<init-param>
+			<param-name>height</param-name>
+			<param-value>30</param-value>
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>validatecode</servlet-name>
+		<url-pattern>/getvm.do</url-pattern>
+	</servlet-mapping>
+	
+	<!-- 二维码生成器 -->
+	<servlet>
+		<servlet-name>qcode</servlet-name>
+		<servlet-class>cn.dofuntech.core.web.servlet.QCodeServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>qcode</servlet-name>
+		<url-pattern>/qcode.do</url-pattern>
+	</servlet-mapping>
+
+	<!-- - Servlet that dispatches request to registered handlers (Controller 
+		implementations). -->
+	<servlet>
+		<servlet-name>springServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:spring-servlet.xml</param-value>
+		</init-param>
+		<load-on-startup>2</load-on-startup>
+		<async-supported>true</async-supported>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>springServlet</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+	<!-- 文件上传 -->
+	<servlet>
+        <servlet-name>uploadfile</servlet-name>
+        <servlet-class>cn.dofuntech.core.web.servlet.FileUploadServlet</servlet-class>
+        <init-param>
+            <param-name>allowedExt</param-name>
+            <param-value>jpg,gif,png,jpeg,txt,apk,APK</param-value>
+        </init-param>
+		<init-param>
+            <param-name>maxSize</param-name><!-- 允许文件大小 -->
+	        <param-value>50L</param-value><!-- 长整型，单位M-->
+        </init-param>
+        <init-param>
+            <param-name>uploadFilePath</param-name>
+	        <param-value>d:/attachment</param-value><!-- 本地配置 -->
+            <!-- <param-value>/home/dofuntech/apache-tomcat-6.0.35-mdm/webapps/ROOT/upload</param-value> --><!-- 服务器配置待定 -->
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>uploadfile</servlet-name>
+        <url-pattern>/uploadfile.do</url-pattern>
+    </servlet-mapping>
+
+<!-- jersey-serlvet -->
+	<servlet>
+		<servlet-name>jersey-serlvet</servlet-name>
+		<servlet-class>
+			org.glassfish.jersey.servlet.ServletContainer
+		</servlet-class>
+		<init-param>
+			<param-name>javax.ws.rs.Application</param-name>
+			<param-value>cn.dofuntech.cis.api.util.RestJaxRsApplication</param-value>
+		</init-param>
+		<init-param>
+			<param-name>jersey.config.server.provider.packages</param-name>
+			<param-value>cn.dofuntech.cis.api.resource;com.wordnik.swagger.jaxrs.listing</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<!-- swagger -->
+	<servlet>
+		<servlet-name>Jersey2Config</servlet-name>
+		<servlet-class>com.wordnik.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
+		<init-param>
+			<param-name>api.version</param-name>
+			<param-value>1.0.0</param-value>
+		</init-param>
+		<init-param>
+			<param-name>swagger.api.basepath</param-name>
+			<param-value>/scl_cis/api</param-value>
+		</init-param>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+    <servlet-mapping>
+        <servlet-name>jersey-serlvet</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+
+	<!-- Map all requests to the DispatcherServlet for handling -->
+	<welcome-file-list>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>
+
+	<!-- <error-page>
+		<error-code>404</error-code>
+		<location>error/404.html</location>
+	</error-page>
+	<error-page>
+		<error-code>405</error-code>
+		<location>error/405.html</location>
+	</error-page>
+	<error-page>
+		<error-code>500</error-code>
+		<location>error/500.html</location>
+	</error-page> -->
+	<session-config>
+		<session-timeout>120</session-timeout>
+	</session-config>
+	
+	
+</web-app>

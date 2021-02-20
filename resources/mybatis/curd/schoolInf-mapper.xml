@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.SchoolInfMapper">
+	
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="schoolName != null and schoolName != ''">
+			  and t.school_name LIKE CONCAT('%',#{schoolName},'%')
+			</if>
+			<if test="schoolBm != null and schoolBm != ''">
+			  and t.school_bm = #{schoolBm}
+			</if>
+			<if test="president != null and president != ''">
+			  and t.president = #{president}
+			</if>
+			<if test="iname != null and iname != ''">
+			  and t.iname = #{iname}
+			</if>
+			<if test="sname != null and sname != ''">
+			  and t.sname = #{sname}
+			</if>
+			<if test="contactsName != null and contactsName != ''">
+			  and t.contacts_name = #{contactsName}
+			</if>
+			<if test="contactsMobile != null and contactsMobile != ''">
+			  and t.contacts_mobile = #{contactsMobile}
+			</if>
+			<if test="email != null and email != ''">
+			  and t.email = #{email}
+			</if>
+			<if test="fixPhone != null and fixPhone != ''">
+			  and t.fix_phone = #{fixPhone}
+			</if>
+			<if test="mainAddress != null and mainAddress != ''">
+			  and t.main_address = #{mainAddress}
+			</if>
+			<if test="detailAddress != null and detailAddress != ''">
+			  and t.detail_address = #{detailAddress}
+			</if>
+			<if test="logo != null and logo != ''">
+			  and t.logo = #{logo}
+			</if>
+			<if test="businessLicense != null and businessLicense != ''">
+			  and t.business_license = #{businessLicense}
+			</if>
+			<if test="idCard != null and idCard != ''">
+			  and t.id_card = #{idCard}
+			</if>
+			<if test="category != null and category != ''">
+			  and t.category = #{category}
+			</if>
+			<if test="readme != null and readme != ''">
+			  and t.readme = #{readme}
+			</if>
+			<if test="status != null and status != ''">
+			  and t.status = #{status}
+			</if>
+			<if test="addTime != null and addTime != ''">
+			  and t.add_time = #{addTime}
+			</if>
+			<if test="editTime != null and editTime != ''">
+			  and t.edit_time = #{editTime}
+			</if>
+	</sql>
+	
+    <sql id="columns">
+    	t.id, t.school_name, t.school_bm, t.president, t.iname, t.sname, t.contacts_name, t.contacts_mobile, t.email, t.fix_phone, t.main_address, t.detail_address, t.logo, t.business_license, t.id_card, t.category, t.readme, t.status, t.add_time, t.edit_time
+    </sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.SchoolInf">
+		INSERT INTO t_school_inf (
+			id, school_name, school_bm, president, iname, sname, contacts_name, contacts_mobile, email, fix_phone, main_address, detail_address, logo, business_license, id_card, category, readme, status, add_time, edit_time
+		) VALUES (
+			#{id}, #{schoolName}, #{schoolBm}, #{president}, #{iname}, #{sname}, #{contactsName}, #{contactsMobile}, #{email}, #{fixPhone}, #{mainAddress}, #{detailAddress}, #{logo}, #{businessLicense}, #{idCard}, #{category}, #{readme}, #{status}, #{addTime}, #{editTime}
+		)
+	</insert>
+	
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.SchoolInf">
+		SELECT
+		<include refid="columns"/>
+		FROM t_school_inf t
+	</select>
+	
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.SchoolInf">
+		SELECT
+		<include refid="columns"/>
+		FROM t_school_inf t
+		<where>
+		<include refid="condition" />
+		</where>
+	</select>
+	
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.SchoolInf">
+		SELECT
+		<include refid="columns"/>
+		FROM t_school_inf t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+	
+	
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.SchoolInf">
+		UPDATE t_school_inf 
+		SET
+		id=#{id}, school_name=#{schoolName}, school_bm=#{schoolBm}, president=#{president}, iname=#{iname}, sname=#{sname}, contacts_name=#{contactsName}, contacts_mobile=#{contactsMobile}, email=#{email}, fix_phone=#{fixPhone}, main_address=#{mainAddress}, detail_address=#{detailAddress}, logo=#{logo}, business_license=#{businessLicense}, id_card=#{idCard}, category=#{category}, readme=#{readme}, status=#{status}, add_time=#{addTime}, edit_time=#{editTime}
+		WHERE
+		id=#{id}
+	</update>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.SchoolInf">
+		DELETE FROM t_school_inf 
+		WHERE
+		id=#{id}
+	</delete>
+	
+</mapper>

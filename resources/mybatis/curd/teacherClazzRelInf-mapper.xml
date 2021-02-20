@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.TeacherClazzRelInfMapper">
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+            <if test="schoolId != null and schoolId != ''">
+                and t.school_id = #{schoolId}
+            </if>
+			<if test="clazz != null and clazz != ''">
+			  and t.clazz = #{clazz}
+			</if>
+			<if test="userId != null and userId != ''">
+			  and t.user_id = #{userId}
+			</if>
+			<if test="userName != null and userName != ''">
+			  and t.user_name = #{userName}
+			</if>
+	</sql>
+
+    <sql id="columns">
+    	t.id, t.school_id,t.clazz, t.user_id, t.user_name
+    </sql>
+
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.TeacherClazzRelInf">
+		INSERT INTO t_teacher_clazz_rel_inf (
+			id, clazz, user_id, user_name,school_id
+		) VALUES (
+			#{id}, #{clazz}, #{userId}, #{userName}, #{schoolId}
+		)
+	</insert>
+
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.TeacherClazzRelInf">
+		SELECT
+		<include refid="columns"/>
+		FROM t_teacher_clazz_rel_inf t
+	</select>
+
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.TeacherClazzRelInf">
+		SELECT
+		<include refid="columns"/>
+		FROM t_teacher_clazz_rel_inf t
+		<where>
+		<include refid="condition" />
+		</where>
+	</select>
+
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.TeacherClazzRelInf">
+		SELECT
+		<include refid="columns"/>
+		FROM t_teacher_clazz_rel_inf t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.TeacherClazzRelInf">
+		UPDATE t_teacher_clazz_rel_inf 
+		SET
+		id=#{id}, clazz=#{clazz}, user_id=#{userId}, user_name=#{userName}, school_id=#{schoolId}
+		WHERE
+		id=#{id}
+	</update>
+
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.TeacherClazzRelInf">
+		DELETE FROM t_teacher_clazz_rel_inf 
+		WHERE
+		id=#{id}
+	</delete>
+
+</mapper>

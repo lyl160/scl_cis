@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.dofuntech.dfauth.repository.mapper.UserDao">
+	<resultMap type="cn.dofuntech.dfauth.bean.UserInf" id="userMap">
+		<id property="id" column="ID" />
+		<result property="orgId" column="ORG_ID" />
+		<result property="sysId" column="SYS_ID" />
+		<result property="userId" column="USER_ID" />
+		<result property="userName" column="USER_NAME" />
+		<result property="userPwd" column="USER_PWD" />
+		<result property="userRandom" column="USER_RANDOM" />
+		<result property="userStatus" column="USER_STATUS" />
+		<result property="lnum" column="LNUM" />
+		<result property="lastLoginTime" column="LAST_LOGIN_TIME" />
+		<result property="lastLoginIp" column="LAST_LOGIN_IP" />
+		<result property="phone" column="PHONE" />
+		<result property="email" column="EMAIL" />
+		<result property="agentId" column="AGENT_ID" />
+		<result property="templatename" column="TEMPLATE_NAME" />
+	</resultMap>
+
+
+	<insert id="insertEntity" useGeneratedKeys="true" keyProperty="userId" parameterType="cn.dofuntech.dfauth.bean.UserInf">
+		insert into AUTH_USER_INF (ID,SYS_ID,ORG_ID, USER_ID, USER_NAME, USER_PWD, USER_RANDOM, USER_STATUS,LNUM,LAST_LOGIN_TIME,LAST_LOGIN_IP,PHONE,EMAIL,AGENT_ID)
+		values (#{id,jdbcType=NUMERIC},#{sysId},#{orgId},#{userId},#{userName},#{userPwd},#{userRandom},#{userStatus},#{lnum},#{lastLoginTime},#{lastLoginIp},#{phone,jdbcType=VARCHAR},#{email,jdbcType=VARCHAR},#{agentId,jdbcType=VARCHAR})
+	</insert>
+
+	<update id="updateEntity" parameterType="cn.dofuntech.dfauth.bean.UserInf">
+		update AUTH_USER_INF
+		<set>
+			<if test="userName != null and userName != ''">
+				USER_NAME = #{userName},
+			</if>
+			<if test="userPwd != null and userPwd != ''">
+				USER_PWD = #{userPwd},
+			</if>
+			<if test="userRandom != null and userRandom != ''">
+				USER_RANDOM = #{userRandom},
+			</if>
+			<if test="userStatus != null">
+				USER_STATUS = #{userStatus},
+			</if>
+			<if test="lnum != null">
+				LNUM = #{lnum},
+			</if>
+			<if test="lastLoginIp != null">
+				LAST_LOGIN_IP = #{lastLoginIp},
+			</if>
+			<if test="lastLoginTime != null">
+				LAST_LOGIN_TIME = #{lastLoginTime},
+			</if>
+			<if test="phone != null">
+				PHONE = #{phone},
+			</if>
+			<if test="email != null">
+				EMAIL = #{email},
+			</if>
+			<if test="templatename != null">
+				template_name = #{templatename}
+			</if>
+		</set>
+		<where>
+			ID = #{id}
+		</where>
+	</update>
+
+
+	<select id="queryMap" parameterType="cn.dofuntech.dfauth.bean.UserInf" resultMap="userMap">
+		SELECT ID,SYS_ID, ORG_ID, USER_ID, USER_NAME, USER_PWD, USER_RANDOM, USER_STATUS,LNUM,LAST_LOGIN_TIME,LAST_LOGIN_IP,PHONE,EMAIL,AGENT_ID,TEMPLATE_NAME
+		FROM AUTH_USER_INF
+		<where>
+			<if test="userName != null and userName != ''">
+				USER_NAME LIKE CONCAT(#{userName},'%')
+			</if>
+			<if test="userPwd != null and userPwd != ''">
+				and USER_PWD = #{userPwd}
+			</if>
+			<if test="userRandom != null and userRandom != ''">
+				and USER_RANDOM = #{userRandom}
+			</if>
+			<if test="userStatus != null">
+				and USER_STATUS = #{userStatus}
+			</if>
+			<if test="userId != null and userId != ''">
+				and USER_ID = #{userId}
+			</if>
+			<if test="orgId != null and orgId != ''">
+				and ORG_ID = #{orgId}
+			</if>
+			<if test="id != null and id != ''">
+			    and ID = #{id}
+			</if>
+		</where>
+	</select>
+	
+	<select id="selectEntity" parameterType="cn.dofuntech.dfauth.bean.UserInf" resultMap="userMap">
+		SELECT ID,SYS_ID, ORG_ID, USER_ID, USER_NAME, USER_PWD, USER_RANDOM, USER_STATUS,LNUM,LAST_LOGIN_TIME,LAST_LOGIN_IP,PHONE,EMAIL,AGENT_ID,template_name
+		FROM AUTH_USER_INF
+		<where>
+			<if test="userName != null and userName != ''">
+				USER_NAME = #{userName}
+			</if>
+			<if test="userPwd != null and userPwd != ''">
+				AND USER_PWD = #{userPwd}
+			</if>
+			<if test="userRandom != null and userRandom != ''">
+				AND USER_RANDOM = #{userRandom}
+			</if>
+			<if test="userStatus != null">
+				AND USER_STATUS = #{userStatus}
+			</if>
+			<if test="userId != null and userId != ''">
+				AND USER_ID = #{userId}
+			</if>
+			<if test="orgId != null and orgId != ''">
+				AND ORG_ID = #{orgId}
+			</if>
+			<if test="id != null">
+				AND ID = #{id}
+			</if>
+			<if test="sysId != null">
+				AND SYS_ID = #{sysId}
+			</if>
+			<if test="agentId != null">
+				AND AGENT_ID = #{agentId}
+			</if>
+			<if test="rids != null and rids != ''">
+				AND ID IN (SELECT
+				U_ID
+				FROM
+				AUTH_USER_ROLE_REL_INF
+				WHERE
+				R_ID IN (${rids}))
+			</if>
+		</where>
+	</select>
+
+	<select id="selectList" parameterType="cn.dofuntech.dfauth.bean.UserInf" resultMap="userMap">
+		SELECT ID,SYS_ID, ORG_ID, USER_ID, USER_NAME, USER_PWD, USER_RANDOM, USER_STATUS,LNUM,LAST_LOGIN_TIME,LAST_LOGIN_IP,PHONE,EMAIL,AGENT_ID
+		FROM AUTH_USER_INF
+		<where>
+			<if test="userName != null and userName != ''">
+				USER_NAME LIKE CONCAT(#{userName},'%')
+			</if>
+			<if test="userPwd != null and userPwd != ''">
+				and USER_PWD = #{userPwd}
+			</if>
+			<if test="userRandom != null and userRandom != ''">
+				and USER_RANDOM = #{userRandom}
+			</if>
+			<if test="userStatus != null">
+				and USER_STATUS = #{userStatus}
+			</if>
+			<if test="userId != null and userId != ''">
+				and USER_ID = #{userId}
+			</if>
+			<if test="orgId != null and orgId != ''">
+				and ORG_ID = #{orgId}
+			</if>
+			<if test="id != null">
+				AND ID = #{id}
+			</if>
+			<if test="rids != null and rids != ''">
+				AND ID IN (SELECT
+				U_ID
+				FROM
+				AUTH_USER_ROLE_REL_INF
+				WHERE
+				R_ID IN (${rids}))
+			</if>
+			<if test="sysId != null">
+				AND SYS_ID = #{sysId}
+			</if>
+			<if test="agentId != null">
+				AND AGENT_ID = #{agentId}
+			</if>
+		</where>
+	</select>
+
+	<select id="countEntity" parameterType="cn.dofuntech.dfauth.bean.UserInf" resultType="java.lang.Integer" >
+		SELECT count(*)
+		FROM AUTH_USER_INF
+		<where>
+			<if test="userName != null and userName != ''">
+				USER_NAME LIKE CONCAT(#{userName},'%')
+			</if>
+			<if test="userPwd != null and userPwd != ''">
+				and USER_PWD = #{userPwd}
+			</if>
+			<if test="userRandom != null and userRandom != ''">
+				and USER_RANDOM = #{userRandom}
+			</if>
+			<if test="userStatus != null">
+				and USER_STATUS = #{userStatus}
+			</if>
+			<if test="userId != null and userId != ''">
+				and USER_ID = #{userId}
+			</if>
+			<if test="id != null">
+				AND ID = #{id}
+			</if>
+			<if test="rids != null and rids != ''">
+				AND ID IN (SELECT
+				U_ID
+				FROM
+				AUTH_USER_ROLE_REL_INF
+				WHERE
+				R_ID IN (${rids}))
+			</if>
+			<if test="sysId != null">
+				AND SYS_ID = #{sysId}
+			</if>
+			<if test="agentId != null">
+				AND AGENT_ID = #{agentId}
+			</if>
+		</where>
+	</select>
+	
+	<select id="countByMap" parameterType="java.util.Map" resultType="java.lang.Integer" >
+		SELECT count(*)
+		FROM AUTH_USER_INF
+		<where>
+		    1=1
+			<if test="userName != null and userName != ''">
+				AND USER_NAME LIKE CONCAT('%',#{userName},'%')
+			</if>
+			<if test="userPwd != null and userPwd != ''">
+				AND USER_PWD = #{userPwd}
+			</if>
+			<if test="userRandom != null and userRandom != ''">
+				AND USER_RANDOM = #{userRandom}
+			</if>
+			<if test="userStatus != null">
+				AND USER_STATUS = #{userStatus}
+			</if>
+			<if test="userId != null and userId != ''">
+				AND USER_ID  LIKE CONCAT(#{userId},'%')
+			</if>
+			<if test="id != null">
+				AND ID = #{id}
+			</if>
+			<if test="rids != null and rids != ''">
+				AND ID IN (SELECT
+				U_ID
+				FROM
+				AUTH_USER_ROLE_REL_INF
+				WHERE
+				R_ID IN (${rids}))
+			</if>
+			<if test="orgId != null and orgId != '' ">
+				AND ORG_ID = #{orgId}
+			</if>
+			<if test="sysId != null">
+				AND SYS_ID = #{sysId}
+			</if>
+			<if test="agentId != null">
+				AND AGENT_ID = #{agentId}
+			</if>
+		</where>
+	</select>
+
+	
+	<select id="selectPageList" parameterType="java.util.HashMap" resultMap="userMap" >
+				SELECT ID, SYS_ID,ORG_ID, USER_ID, USER_NAME, USER_PWD, USER_RANDOM, USER_STATUS,LNUM,LAST_LOGIN_TIME,LAST_LOGIN_IP,PHONE,EMAIL,AGENT_ID
+				FROM AUTH_USER_INF
+				<where>
+					<if test="userName != null and userName != ''">
+						AND USER_NAME LIKE CONCAT('%',#{userName},'%')
+					</if>
+					<if test="userPwd != null and userPwd != ''">
+						AND USER_PWD = #{userPwd}
+					</if>
+					<if test="userRandom != null and userRandom != ''">
+						AND USER_RANDOM = #{userRandom}
+					</if>
+					<if test="userStatus != null">
+						AND USER_STATUS = #{userStatus}
+					</if>
+					<if test="userId != null and userId != ''">
+						AND USER_ID  LIKE CONCAT(#{userId},'%')
+					</if>
+					<if test="id != null">
+						AND ID = #{id}
+					</if>
+					<if test="rids != null and rids != ''">
+						AND ID IN (SELECT
+						U_ID
+						FROM
+						AUTH_USER_ROLE_REL_INF
+						WHERE
+						R_ID IN (${rids}))
+					</if>
+					<if test="orgId != null and orgId != ''">
+						AND ORG_ID = #{orgId}
+					</if>			
+					<if test="sysId != null">
+						AND SYS_ID = #{sysId}
+					</if>
+					<if test="agentId != null">
+						AND AGENT_ID = #{agentId}
+					</if>
+				</where>
+				ORDER BY ID DESC LIMIT #{start},#{pageSize}
+	</select>
+	
+
+	<update id="updateUsersStatus" parameterType="java.util.HashMap">
+		UPDATE AUTH_USER_INF SET USER_STATUS = #{userStatus}
+		WHERE ID IN (${ids})
+	</update>
+
+	<delete id="deleteUsers" parameterType="java.util.HashMap">
+		DELETE FROM AUTH_USER_INF WHERE ID IN (${ids})
+	</delete>
+
+	<update id="updateUserPwd" parameterType="java.util.HashMap">
+		update AUTH_USER_INF
+		<set>
+			<if test="npwd != null and npwd != ''">
+				USER_PWD = #{npwd},
+			</if>
+			<if test="random != null and random != ''">
+				USER_RANDOM = #{random},
+			</if>
+		</set>
+		<where>
+			ID = #{ids}
+			<if test="opwd != null and opwd != ''">
+				AND USER_PWD = #{opwd}
+			</if>
+		</where>
+	</update>
+		<update id="updateAgentUserPwd" parameterType="java.util.HashMap">
+		UPDATE AUTH_USER_INF
+		<set>
+			<if test="pwd != null and pwd != ''">
+				USER_PWD = #{pwd},
+			</if>
+			<if test="random != null and random != ''">
+				USER_RANDOM = #{random},
+			</if>
+		</set>
+		<where>
+			<if test="userId != null and userId != ''">
+				 USER_ID = #{userId}
+			</if>
+			<if test="agentId != null and agentId != ''">
+				AND AGENT_ID = #{agentId}
+			</if>
+		</where>
+	</update>
+
+    <select id="countLonEntity" parameterType="cn.dofuntech.dfauth.bean.UserInf" resultType="java.lang.Integer" >
+		SELECT count(*)
+		FROM AUTH_USER_INF WHERE AGENT_ID = #{agentId} AND USER_ID = #{userId}
+	</select>
+	
+	<select id="queryAll" parameterType="java.util.HashMap" resultType="cn.dofuntech.dfauth.bean.UserInf">
+	SELECT t.ID,t.USER_NAME
+    FROM AUTH_USER_INF t
+    LEFT JOIN auth_user_role_rel_inf tt ON t.id=tt.U_ID
+    WHERE t.AGENT_ID=#{agentId}
+	</select>
+	
+	
+	<select id="queryrole" parameterType="cn.dofuntech.dfauth.bean.UserInf" resultType="cn.dofuntech.dfauth.bean.UserInf">
+	SELECT t.template_name,t1.ROLE_ID AS role_id,t.USER_NAME,t.AGENT_ID,t1.ROLE_NAME AS rolename
+    FROM AUTH_USER_INF t
+    LEFT JOIN auth_user_role_rel_inf tt ON t.id=tt.U_ID
+    LEFT JOIN auth_role_inf t1 ON tt.R_ID=t1.ROLE_ID
+    WHERE t.USER_ID=#{userId}
+	</select>
+	
+	
+</mapper>

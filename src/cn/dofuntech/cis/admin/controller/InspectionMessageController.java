@@ -1,0 +1,277 @@
+package cn.dofuntech.cis.admin.controller;
+
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.alibaba.fastjson.JSON;
+
+import cn.dofuntech.cis.admin.controller.base.ExportExcelUtil;
+import cn.dofuntech.cis.admin.repository.domain.InspectionMessage;
+import cn.dofuntech.cis.admin.repository.domain.NoticeMx;
+import cn.dofuntech.cis.admin.service.InspectionMessageService;
+import cn.dofuntech.cis.admin.service.NoticeMxService;
+import cn.dofuntech.cis.admin.service.SchoolInfService;
+import cn.dofuntech.core.page.Paginator;
+import cn.dofuntech.core.web.AdminController;
+import cn.dofuntech.dfauth.util.UAI;
+
+/**
+ * 控制器
+ * InspectionMessageController
+ */
+
+@Controller
+@RequestMapping("/inspectionMessage")
+public class InspectionMessageController extends AdminController<InspectionMessage> {
+
+    @Resource
+    private InspectionMessageService inspectionMessageService;
+    @Resource
+    private SchoolInfService schoolInfService;
+    @Resource
+    private NoticeMxService noticeMxService;
+
+
+
+    @RequestMapping("/Detail")
+    public String Detail(HttpServletRequest request, Long id, Model map) {
+        InspectionMessage inspectionMessage = inspectionMessageService.get(id);
+        String[] img = inspectionMessage.getImgs().split(",");
+        List<String> listimgs = new ArrayList<String>();
+        for (int i = 0; i < img.length; i++) {
+            listimgs.add(img[i]);
+        }
+        inspectionMessage.setListimgs(listimgs);
+        map.addAttribute("entity", inspectionMessage);
+        return "inspectionmessage/detail";
+
+
+    }
+
+    /**
+     * 一日综述数据列表
+     *
+     * @param params
+     * @param page
+     * @param rows
+     * @return
+     */
+    @RequestMapping(value = "/queryAll")
+    public @ResponseBody
+    Map<String, Object> query(@RequestParam Map<String, Object> params, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "rows", required = false) Integer rows) {
+        Map<String, Object> result = new HashMap<String, Object>();
+        //  params.put("s_orgid",getUserInSession().getOrgId());
+        if (page == null) {
+            page = Paginator.DEFAULT_CURRENT_PAGE;
+        }
+        if (rows == null) {
+            rows = Paginator.DEFAULT_PAGE_SIZE;
+        }
+        Paginator paginator = new Paginator(page, rows);
+
+        UAI uai = ((UAI) getRequest().getSession().getAttribute("UID"));
+        //大校长为9可以查看所有的一日综述
+        if (!uai.getRoleId().equals("9")) {
+            params.put("schoolId", uai.getAgentId());
+        }
+        List<InspectionMessage> list = inspectionMessageService.query(params, paginator);
+        long totalCount = paginator.getTotalCount();
+        result.put("total", totalCount);
+        result.put("rows", list);
+        result.put("page", page);
+        result.put("totalPage", totalCount % rows == 0 ? totalCount / rows : totalCount / rows + 1);
+        return result;
+    }
+
+    /**
+     * 教师巡查明细导出
+     *
+     * @return
+     */
+    @RequestMapping(value = "/msgExport4Js")
+    public void msgExport4Js(@RequestParam Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) {
+        logger.info("教师巡查明细导出======start=======参数:{}", JSON.toJSONString(params));
+        try {
+            UAI uai = ((UAI) getRequest().getSession().getAttribute("UID"));
+            //大校长为9可以查看所有的模板
+            if (!uai.getRoleId().equals("9")) {
+                params.put("schoolId", uai.getAgentId());
+            }
+            List<InspectionMessage> msgMappings = inspectionMessageService.query(params);
+            //构造标题
+            List<String> headers = new ArrayList<String>();
+            headers.add("序号");
+            headers.add("内容描述");
+            headers.add("提交人");
+
+            headers.add("提交日期");
+            headers.add("地点");
+            headers.add("学校");
+            headers.add("图片");
+            //构造行数据
+            List<List<String>> xdataMain = new ArrayList<List<String>>();
+            int index = 1;
+            for (InspectionMessage bm : msgMappings) {
+                List<String> xdata_temp = new ArrayList<String>();
+                xdata_temp.add(String.valueOf(index));
+                xdata_temp.add(bm.getRemark());
+                xdata_temp.add(bm.getUserName());
+
+                xdata_temp.add(bm.getFmtDate());
+                xdata_temp.add(bm.getPlace());
+                xdata_temp.add(bm.getSchoolName());
+                if (StringUtils.isNotEmpty(bm.getImgs())) {
+                    String[] imgArray = bm.getImgs().split(",");
+                    StringBuilder imgsNew = new StringBuilder();
+                    for (String img : imgArray) {
+                        //imgsNew.append(ROOTPAHH).append(img).append(",");
+                        xdata_temp.add(ROOTPAHH+img);
+                    }
+                }else {
+                    xdata_temp.add("");
+                }
+                index++;
+                xdataMain.add(xdata_temp);
+            }
+            //订单主表信息
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            OutputStream out = response.getOutputStream();
+            String title = "教师巡查明细";
+            ExportExcelUtil<InspectionMessage> excelUtil = new ExportExcelUtil<InspectionMessage>();
+            String pattern = "yyyy-MM-dd HH:mm:dd";
+            response.setHeader("Content-Disposition", "attachment;filename=" + new String((title + ".xls").getBytes(), "iso-8859-1"));
+            excelUtil.exportoExcelSorce(title, headers, null, xdataMain, out, pattern);
+            logger.info("教师巡查明细导出成功=====");
+        } catch (Exception ex) {
+            logger.error("教师巡查明细数据导出异常：{}", ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * 护校队巡查明细导出
+     *
+     * @return
+     */
+    @RequestMapping(value = "/msgExport4Hxd")
+    public void msgExport4Hxd(@RequestParam Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) {
+        logger.info("护校队巡查明细导出======start=======参数:{}", JSON.toJSONString(params));
+        try {
+            UAI uai = ((UAI) getRequest().getSession().getAttribute("UID"));
+            //大校长为9可以查看所有的模板
+            if (!uai.getRoleId().equals("9")) {
+                params.put("schoolId", uai.getAgentId());
+            }
+            List<InspectionMessage> msgMappings = inspectionMessageService.query(params);
+            //构造标题
+            List<String> headers = new ArrayList<String>();
+            headers.add("序号");
+            headers.add("内容描述");
+            headers.add("提交人");
+            headers.add("提交日期");
+            headers.add("地点");
+            headers.add("学校");
+            headers.add("图片");
+            //构造行数据
+            List<List<String>> xdataMain = new ArrayList<List<String>>();
+            int index = 1;
+            for (InspectionMessage bm : msgMappings) {
+                List<String> xdata_temp = new ArrayList<String>();
+                xdata_temp.add(String.valueOf(index));
+                xdata_temp.add(bm.getRemark());
+                xdata_temp.add(bm.getUserName());
+
+                xdata_temp.add(bm.getFmtDate());
+                xdata_temp.add(bm.getPlace());
+                xdata_temp.add(bm.getSchoolName());
+                if (StringUtils.isNotEmpty(bm.getImgs())) {
+                    String[] imgArray = bm.getImgs().split(",");
+                    StringBuilder imgsNew = new StringBuilder();
+                    for (String img : imgArray) {
+                        //imgsNew.append(ROOTPAHH).append(img).append(",");
+                        xdata_temp.add(ROOTPAHH + img);
+                    }
+                }else {
+                    xdata_temp.add("");
+                }
+                index++;
+                xdataMain.add(xdata_temp);
+            }
+            //订单主表信息
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            OutputStream out = response.getOutputStream();
+            String title = "护校队巡查明细";
+            ExportExcelUtil<InspectionMessage> excelUtil = new ExportExcelUtil<InspectionMessage>();
+            String pattern = "yyyy-MM-dd HH:mm:dd";
+            response.setHeader("Content-Disposition", "attachment;filename=" + new String((title + ".xls").getBytes(), "iso-8859-1"));
+            excelUtil.exportoExcelSorce(title, headers, null, xdataMain, out, pattern);
+            logger.info("护校队巡查明细导出成功=====");
+        } catch (Exception ex) {
+            logger.error("护校队巡查明细数据导出异常：{}", ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * 通报明细导出
+     *
+     * @return
+     */
+    @RequestMapping(value = "/msgExport")
+    public void msgExport(@RequestParam Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) {
+        logger.info("通报明细导出======start=======参数:{}", JSON.toJSONString(params));
+        try {
+            UAI uai = ((UAI) getRequest().getSession().getAttribute("UID"));
+            //大校长为9可以查看所有的模板
+            if (!uai.getRoleId().equals("9")) {
+                params.put("schoolId", uai.getAgentId());
+            }
+            List<NoticeMx> msgMappings = noticeMxService.query(params);
+            //构造标题
+            List<String> headers = new ArrayList<String>();
+            headers.add("序号");
+            headers.add("姓名");
+            headers.add("值班日期");
+            headers.add("开始时间");
+            headers.add("结束时间");
+            headers.add("地点");
+            //构造行数据
+            List<List<String>> xdataMain = new ArrayList<List<String>>();
+            int index = 1;
+            for (NoticeMx bm : msgMappings) {
+                List<String> xdata_temp = new ArrayList<String>();
+                xdata_temp.add(String.valueOf(index));
+                xdata_temp.add(bm.getUserName());
+                xdata_temp.add(bm.getDutyDate());
+                xdata_temp.add(bm.getStartTime());
+                xdata_temp.add(bm.getEndTime());
+                xdata_temp.add(bm.getPlace());
+                index++;
+                xdataMain.add(xdata_temp);
+            }
+            //订单主表信息
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            OutputStream out = response.getOutputStream();
+            String title = "通报明细";
+            ExportExcelUtil<InspectionMessage> excelUtil = new ExportExcelUtil<InspectionMessage>();
+            String pattern = "yyyy-MM-dd HH:mm:dd";
+            response.setHeader("Content-Disposition", "attachment;filename=" + new String((title + ".xls").getBytes(), "iso-8859-1"));
+            excelUtil.exportoExcelSorce(title, headers, null, xdataMain, out, pattern);
+            logger.info("通报明细导出成功=====");
+        } catch (Exception ex) {
+            logger.error("通报明细数据导出异常：{}", ex.getMessage(), ex);
+        }
+    }
+}

@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.dofuntech.dfauth.repository.mapper.RoleDao">
+
+	<resultMap type="cn.dofuntech.dfauth.bean.RoleInf" id="RoleQueryByConMap">
+		<result property="sysId" column="SYS_ID" />
+		<result property="roleId" column="ROLE_ID" />
+		<result property="roleName" column="ROLE_NAME" />
+		<result property="roleDesc" column="ROLE_DESC" />
+		<result property="roleStatus" column="ROLE_STATUS" />
+		<result property="orgId" column="ORG_ID" />
+	</resultMap>
+
+	<resultMap type="cn.dofuntech.dfauth.bean.RoleInf" id="RoleResultMap" extends="RoleQueryByConMap">
+		<collection property="list" javaType="cn.dofuntech.dfauth.bean.UserInf">
+			<id property="id" column="RUID" />
+			<id property="userId" column="USER_ID" />
+			<result property="orgId" column="ORG_ID" />
+			<result property="userName" column="USER_NAME" />
+			<result property="userRandom" column="USER_RANDOM" />
+			<result property="userStatus" column="USER_STATUS" />
+		</collection>
+	</resultMap>
+
+	<select id="selectRoleStateByUserId" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		select COUNT(*) from AUTH_ROLE_INF T1
+		WHERE role_status ='0'
+		and EXISTS(
+		select 'X' from AUTH_USER_ROLE_REL_INF T2
+		WHERE T2.U_ID =#{uid}
+		AND T2.R_ID=T1. ROLE_ID)
+	</select>
+	<select id="selectRoleInfByUser" parameterType="int" resultMap="RoleQueryByConMap">
+		SELECT
+		T2.ROLE_ID AS ROLE_ID,
+		T2.ROLE_NAME AS ROLE_NAME,
+		T2.ROLE_DESC AS ROLE_DESC,
+		T2.SYS_ID AS SYS_ID
+		FROM
+		AUTH_ROLE_INF T2
+		WHERE
+		T2.ROLE_ID IN (
+		SELECT T1.R_ID
+		FROM AUTH_USER_ROLE_REL_INF T1
+		WHERE T1.U_ID = #{UID}
+		)
+
+	</select>
+	<select id="countRole" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(*) num from AUTH_ROLE_INF
+		<where>
+			<if test="roleId !=null">
+				role_id = #{roleId}
+			</if>
+			<if test="roleName != null">
+				and role_name = #{roleName}
+			</if>
+			<if test="agentId != null and agentId != ''">
+				and AGENT_ID = #{agentId}
+			</if>
+			<if test="orgId != null and orgId != '' ">
+				and org_id = #{orgId}
+			</if>
+			<if test="roleDesc != null and roleDesc !='' ">
+				and ROLE_DESC = #{roleDesc}
+			</if>
+			<if test="sysId != null and sysId !='' ">
+				and SYS_ID = #{sysId}
+			</if>
+		</where>
+	</select>
+	
+	<sql id="WHERE_SELECT_ROLE">
+		<if test="roleName != null and roleName != '' ">
+				and role_name LIKE CONCAT('%',#{roleName},'%')
+			</if>
+			<if test="roleId != null and roleId != '' ">
+				and role_id LIKE CONCAT('%',#{roleId},'%')
+			</if>
+			<if test="roleStatus != null and roleStatus != '' ">
+				and role_status = ${roleStatus}
+			</if>
+			<if test="orgIds != null and orgIds != '' ">
+				and org_id IN (${orgIds})
+			</if>
+			<if test="flag != null and flag != '' ">
+				and role_id != '0001'
+			</if>
+			<if test="sysId != null and sysId !='' ">
+				AND SYS_ID = #{sysId}
+			</if>
+	</sql>
+	
+	<select id="selectListPage" parameterType="java.util.HashMap" resultMap="RoleQueryByConMap" >
+		SELECT * FROM(
+			SELECT * FROM
+		    AUTH_ROLE_INF
+		    <where>
+			    <if test="agentId != null and agentId != '' ">
+					SYS_ID=#{sysId} and AGENT_ID=#{agentId} OR ROLE_ID='0002'
+				</if>
+				<if test="agentId == null or agentId == '' ">
+					SYS_ID='0001' OR ROLE_ID='0002'
+				</if>
+		    </where>
+	    ) ROLE
+		where 1=1
+		<include refid="WHERE_SELECT_ROLE"/>
+		ORDER BY ROLE_ID DESC  LIMIT #{start},#{pageSize}
+	</select>
+
+	<select id="countEntity" parameterType="cn.dofuntech.dfauth.bean.RoleInf" resultType="java.lang.Integer" >
+		SELECT COUNT(*) FROM (
+			SELECT * FROM AUTH_ROLE_INF  WHERE SYS_ID = '0001' OR ROLE_ID='0002'
+		) ROLE
+		where 1=1
+		<include refid="WHERE_SELECT_ROLE"/>
+	</select>
+	<insert id="insertEntity" useGeneratedKeys="true" keyProperty="roleId" parameterType="cn.dofuntech.dfauth.bean.RoleInf">
+		INSERT INTO AUTH_ROLE_INF (SYS_ID,ROLE_NAME,ROLE_DESC,ROLE_STATUS,ORG_ID,AGENT_ID)
+		VALUES (#{sysId},#{roleName,jdbcType=VARCHAR},#{roleDesc,jdbcType=VARCHAR},#{roleStatus,jdbcType=VARCHAR},#{orgId,jdbcType=VARCHAR},#{agentId,jdbcType=VARCHAR})
+	</insert>
+	<insert id="insertRef" parameterType="java.util.HashMap">
+		insert into AUTH_ROLE_MENU_REL_INF (MENU_ID,R_ID)
+		SELECT MENU_ID,#{roleId} AS R_ID FROM AUTH_MENU_INF WHERE MENU_ID IN(${menuId})
+	</insert>
+	<delete id="deleteMenuRefByRole" parameterType="java.lang.String">
+		delete from AUTH_ROLE_MENU_REL_INF where r_id = #{roleId}
+	</delete>
+	<update id="updateEntity" parameterType="cn.dofuntech.dfauth.bean.RoleInf">
+		UPDATE AUTH_ROLE_INF
+		<set>
+			<if test="roleName != null">
+				ROLE_NAME = #{roleName},
+			</if>
+			<if test="roleDesc != null">
+				ROLE_DESC = #{roleDesc},
+			</if>
+			<if test="roleStatus != null">
+				ROLE_STATUS = #{roleStatus},
+			</if>
+			<if test="sysId != null">
+				SYS_ID = #{sysId},
+			</if>
+			<if test="orgId != null">
+				ORG_ID = #{orgId}
+			</if>
+		</set>
+		WHERE role_id = #{roleId}
+	</update>
+
+	<update id="deleteEntity" parameterType="cn.dofuntech.dfauth.bean.RoleInf">
+		UPDATE AUTH_ROLE_INF
+		SET ROLE_STATUS = #{roleStatus}
+		WHERE role_id = #{roleId}
+	</update>
+
+	<update id="deleteEntityList" parameterType="java.util.Map">
+		UPDATE AUTH_ROLE_INF
+		SET ROLE_STATUS = #{status}
+		WHERE ROLE_ID IN
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<select id="queryEntityAll"   resultMap="RoleQueryByConMap">
+		select * from AUTH_ROLE_INF where 1=1 and SYS_ID = #{sysId}
+		<if test="agentId != null and agentId !=''">
+				AND AGENT_ID = #{agentId}
+			</if>
+	</select>
+
+	<select id="queryEntityByCon" parameterType="java.util.Map" resultMap="RoleQueryByConMap">
+		SELECT * FROM AUTH_ROLE_INF
+		<where>
+			<if test="roleId != null">
+				AND ROLE_ID = #{roleId}
+			</if>
+			<if test="roleName != null">
+				AND ROLE_NAME = #{roleName}
+			</if>
+			<if test="orgId != null">
+				AND ORG_ID = #{orgId}
+			</if>
+			<if test="roleStatus != null">
+				AND ROLE_STATUS = #{roleStatus}
+			</if>
+		</where>
+	</select>
+
+
+	<select id="selectEntityById" parameterType="java.lang.String" resultMap="RoleResultMap">
+		SELECT 
+		T1.ROLE_ID,
+		T1.SYS_ID,
+		T1.ROLE_NAME,
+		T1.ROLE_DESC,
+		T1.ROLE_STATUS,
+		T1.ORG_ID,
+		T3.ID AS RUID,
+		T3.USER_ID,
+		T3.ORG_ID,
+		T3.USER_NAME,
+		T3.USER_RANDOM,
+		T3.USER_STATUS
+		FROM AUTH_ROLE_INF T1
+		LEFT JOIN AUTH_USER_ROLE_REL_INF T2 ON(T1.ROLE_ID=T2.R_ID)
+		LEFT JOIN AUTH_USER_INF T3 ON(T2.U_ID=T3.ID)
+		WHERE T1.ROLE_ID = #{roleId}
+
+	</select>
+</mapper>

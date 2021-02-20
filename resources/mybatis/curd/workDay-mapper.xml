@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.WorkDayMapper">
+	
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="year != null and year != ''">
+			  and t.year = #{year}
+			</if>
+			<if test="month != null and month != ''">
+			  and t.month = #{month}
+			</if>
+			<if test="workday != null and workday != ''">
+			  and t.workday = #{workday}
+			</if>
+			<if test="holiday != null and holiday != ''">
+			  and t.holiday = #{holiday}
+			</if>
+			<if test="addtime != null and addtime != ''">
+			  and t.addtime = #{addtime}
+			</if>
+			<if test="edittime != null and edittime != ''">
+			  and t.edittime = #{edittime}
+			</if>
+			<if test="schoolId != null and schoolId != ''">
+			  and t.school_id  = #{schoolId}
+			</if>
+	</sql>
+	
+    <sql id="columns">
+    	t.id, t.year, t.month, t.workday, t.holiday, t.addtime, t.edittime,t.school_id
+    </sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.WorkDay">
+		INSERT INTO t_workday (
+			id, year, month, workday, holiday, addtime, edittime,school_id)
+			VALUES
+			(#{id}, #{year}, #{month}, #{workday} , #{holiday}, #{addtime}, #{edittime},#{schoolId})
+	</insert>
+	
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.WorkDay">
+		SELECT
+		<include refid="columns"/>
+		FROM t_workday t
+	</select>
+	
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.WorkDay">
+		SELECT
+		<include refid="columns"/>
+		FROM t_workday t
+		<where>
+		<include refid="condition" />
+		</where>
+        order by t.year desc,t.month asc
+	</select>
+	
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.WorkDay">
+		SELECT
+		<include refid="columns"/>
+		FROM t_workday t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+	
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.WorkDay">
+		UPDATE t_workday
+		SET
+		id=#{id}, year=#{year}, month=#{month}, workday=#{workday}, holiday=#{holiday}, addtime=#{addtime}, edittime=#{edittime},school_id  = #{schoolId}
+		WHERE
+		id=#{id}
+	</update>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.WorkDay">
+		DELETE FROM t_workday
+		WHERE
+		id=#{id}
+	</delete>
+	
+
+</mapper>

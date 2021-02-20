@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.InspectionMessageMapper">
+
+    <sql id="condition">
+        <if test="id != null and id != ''">
+            t.id = #{id}
+        </if>
+        <if test="type != null and type != ''">
+            and t.type = #{type}
+        </if>
+        <if test="remark != null and remark != ''">
+            and t.remark LIKE CONCAT('%',#{remark},'%')
+        </if>
+        <if test="userName != null and userName != ''">
+            and t.user_name  LIKE CONCAT('%',#{userName},'%')
+        </if>
+        <if test="userId != null and userId != ''">
+            and t.user_id = #{userId}
+        </if>
+        <if test="imgs != null and imgs != ''">
+            and t.imgs = #{imgs}
+        </if>
+        <if test="fmtDate != null and fmtDate != ''">
+            and t.fmt_date = #{fmtDate}
+        </if>
+        <if test="status != null and status != ''">
+            and t.status = #{status}
+        </if>
+        <if test="addTime != null and addTime != ''">
+            and t.add_time like CONCAT('%',#{addTime},'%')
+        </if>
+        <if test="editTime != null and editTime != ''">
+            and t.edit_time = #{editTime}
+        </if>
+        <if test="title != null and title != ''">
+            and t.title like CONCAT('%',#{title})
+        </if>
+        <if test="schoolId != null and schoolId != ''">
+            and t.school_id = #{schoolId}
+        </if>
+        <if test="place != null and place != ''">
+            and t.place like CONCAT('%',#{place},'%')
+        </if>
+        <if test="receiver != null and receiver != ''">
+            and t.receiver = #{receiver}
+        </if>
+    </sql>
+
+    <sql id="columns">
+    	t.id, t.type, t.remark, t.user_name, t.user_id, t.imgs, t.fmt_date, t.status, t.add_time, t.edit_time,t.title,t.school_id,t.place,t.receiver
+    </sql>
+
+    <!-- 新增 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionMessage">
+		INSERT INTO t_inspection_message (
+			id, type, remark, user_name, user_id, imgs, fmt_date, status, add_time, edit_time,title,
+		school_id,place,receiver) VALUES (
+			#{id}, #{type}, #{remark}, #{userName}, #{userId}, #{imgs}, #{fmtDate}, #{status}, #{addTime}, #{editTime},#{title},#{schoolId},#{place},#{receiver}
+		)
+	</insert>
+
+
+    <!-- 查询所有今日-->
+    <select id="queryAll" parameterType="hashmap"
+            resultType="cn.dofuntech.cis.admin.repository.domain.InspectionMessage">
+        SELECT
+        <include refid="columns"/>
+        FROM t_inspection_message t
+        WHERE DATE_FORMAT(add_time,'%Y-%m-%d') = #{addTime} and t.school_id=#{schoolId}
+        <if test="receiver != null and receiver != ''">
+            and t.receiver = #{receiver}
+        </if>
+        order by t.add_time desc
+
+    </select>
+
+    <!-- 查询所有-->
+    <select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionMessage">
+        SELECT
+        <include refid="columns"/>
+        FROM t_inspection_message t
+    </select>
+
+    <!-- 条件查询-->
+    <select id="queryByMap" parameterType="hashmap"
+            resultType="cn.dofuntech.cis.admin.repository.domain.InspectionMessage">
+        SELECT
+        <include refid="columns"/>,
+        s.school_name as schoolName
+        FROM t_inspection_message t
+        LEFT JOIN t_school_inf s ON s.id = t.school_id
+        <where>
+            <include refid="condition"/>
+            <if test="startHours != null and startHours != ''">
+                and STR_TO_DATE(t.add_time,'%Y-%m-%d %H:%i:%s') <![CDATA[ >= ]]> STR_TO_DATE(#{startHours},'%Y-%m-%d
+                %H:%i:%s')
+            </if>
+            <if test="endHours != null and endHours != ''">
+                and STR_TO_DATE(t.add_time,'%Y-%m-%d %H:%i:%s') <![CDATA[ <= ]]> STR_TO_DATE(#{endHours},'%Y-%m-%d
+                %H:%i:%s')
+            </if>
+            <if test="ksTime != null and ksTime != ''">
+                and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ >= ]]> #{ksTime}
+            </if>
+            <if test="jsTime != null and jsTime != ''">
+                and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ <= ]]> #{jsTime}
+            </if>
+            <if test="title2 != null and title2 != ''">
+                and t.title like CONCAT('%',#{title2},'%')
+            </if>
+        </where>
+        order by t.add_time desc
+    </select>
+
+    <!-- 单对象查询-->
+    <select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionMessage">
+        SELECT
+        <include refid="columns"/>
+        FROM t_inspection_message t
+        <where>
+            <include refid="condition"/>
+        </where>
+        limit 0,1
+    </select>
+
+    <!-- 更新-->
+    <update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionMessage">
+		UPDATE t_inspection_message 
+		SET
+		id=#{id},type=#{type}, remark=#{remark}, user_name=#{userName}, user_id=#{userId}, imgs=#{imgs}, fmt_date=#{fmtDate}, status=#{status}, add_time=#{addTime}, edit_time=#{editTime}, title=#{title},school_id  = #{schoolId},place=#{place},receiver=#{receiver}
+		WHERE
+		id=#{id}
+	</update>
+
+    <!-- 删除-->
+    <delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionMessage">
+		DELETE FROM t_inspection_message 
+		WHERE
+		id=#{id}
+	</delete>
+
+</mapper>

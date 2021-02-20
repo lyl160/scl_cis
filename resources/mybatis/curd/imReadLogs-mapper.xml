@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.ImReadLogsMapper">
+	
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="messageId != null and messageId != ''">
+			  and t.message_id = #{messageId}
+			</if>
+			<if test="userId != null and userId != ''">
+			  and t.user_id = #{userId}
+			</if>
+			<if test="userName != null and userName != ''">
+			  and t.user_name = #{userName}
+			</if>
+			<if test="isread != null and isread != ''">
+			  and t.isread = #{isread}
+			</if>
+			<if test="readtime != null and readtime != ''">
+			  and t.readtime = #{readtime}
+			</if>
+			<if test="addtime != null and addtime != ''">
+			  and t.addtime = #{addtime}
+			</if>
+			<if test="edittime != null and edittime != ''">
+			  and t.edittime = #{edittime}
+			</if>
+			<if test="schoolId != null and schoolId != ''">
+			  and t.school_id  = #{schoolId}
+			</if>
+	</sql>
+	
+    <sql id="columns">
+    	t.id, t.message_id, t.user_id, t.user_name, t.isread, t.readtime, t.addtime, t.edittime,t.school_id
+    </sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
+		INSERT INTO t_im_read_logs (
+		 message_id, user_id, user_name, isread, readtime, addtime, edittime,
+		school_id) VALUES (
+		#{messageId}, #{userId}, #{userName}, #{isread}, #{readtime}, #{addtime}, #{edittime},#{schoolId}
+		)
+	</insert>
+	
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
+		SELECT
+		<include refid="columns"/>
+		FROM t_im_read_logs t
+	</select>
+	
+	
+	
+	<!-- 查询今日老师所有-->
+	<select id="queryAll"  parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
+		SELECT
+		<include refid="columns"/>
+		FROM t_im_read_logs t
+		WhERE user_id = #{userId} and DATE_FORMAT(addtime,'%Y-%m-%d') = #{addtime}  order by addtime desc
+	</select>
+	
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
+		SELECT
+		<include refid="columns"/>
+		FROM t_im_read_logs t
+		<where>
+		<include refid="condition" />
+		</where>
+	</select>
+	
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
+		SELECT
+		<include refid="columns"/>
+		FROM t_im_read_logs t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+	
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
+		UPDATE t_im_read_logs 
+		SET
+		id=#{id}, message_id=#{messageId}, user_id=#{userId}, user_name=#{userName}, isread=#{isread}, readtime=#{readtime}, addtime=#{addtime}, edittime=#{edittime},school_id  = #{schoolId}
+		WHERE
+		id=#{id}
+	</update>
+	
+	
+	<!-- 一日更新-->
+	<update id="updateOne" parameterType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
+		UPDATE t_im_read_logs 
+		SET
+		isread=#{isread}, readtime=#{readtime}
+		WHERE
+		user_id = #{userId} and message_id=#{messageId}
+		
+	</update>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
+		DELETE FROM t_im_read_logs 
+		WHERE
+		id=#{id}
+	</delete>
+	
+</mapper>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.PlaceMapper">
+	
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="placeName != null and placeName != ''">
+			  and t.place_name LIKE CONCAT('%',#{placeName},'%')
+			</if>
+			<if test="defaultFlag != null and defaultFlag != ''">
+			  and t.default_flag = #{defaultFlag}
+			</if>
+			<if test="addTime != null and addTime != ''">
+			  and t.add_time = #{addTime}
+			</if>
+			<if test="editTime != null and editTime != ''">
+			  and t.edit_time = #{editTime}
+			</if>
+			<if test="schoolId != null and schoolId != ''">
+			  and t.school_id = #{schoolId}
+			</if>
+			<if test="userId != null and userId != ''">
+			  and t.user_id = #{userId}
+			</if>
+	</sql>
+	
+    <sql id="columns">
+    	t.id, t.place_name, t.default_flag, t.add_time, t.edit_time, t.school_id,t.user_id
+    </sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.Place">
+		INSERT INTO t_place (
+		id,place_name, default_flag, add_time, edit_time, school_id,user_id
+		) VALUES (
+			#{id}, #{placeName}, #{defaultFlag}, #{addTime}, #{editTime}, #{schoolId},#{userId}
+		)
+	</insert>
+	
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.Place">
+		SELECT
+		<include refid="columns"/>
+		FROM t_place t
+	</select>
+	
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.Place">
+		SELECT
+		<include refid="columns"/>,
+		ts.school_name AS schoolname
+		FROM t_place t
+		LEFT JOIN t_school_inf ts ON ts.id=t.school_id
+		<where>
+		<include refid="condition" />
+		</where>
+	</select>
+	
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.Place">
+		SELECT
+		<include refid="columns"/>
+		FROM t_place t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+	
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.Place">
+		UPDATE t_place 
+		SET
+		id=#{id},place_name=#{placeName}, default_flag=#{defaultFlag}, add_time=#{addTime}, edit_time=#{editTime}, school_id=#{schoolId},user_id=#{userId}
+		WHERE
+		id=#{id}
+	</update>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.Place">
+		DELETE FROM t_place 
+		WHERE
+		id=#{id}
+	</delete>
+	
+</mapper>

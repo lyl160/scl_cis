@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.InspectionLogsMapper">
+
+    <sql id="condition">
+        <if test="id != null and id != ''">
+            t.id = #{id}
+        </if>
+        <if test="category1 != null and category1 != ''">
+            and t.category1 = #{category1}
+        </if>
+        <if test="category2 != null and category2 != ''">
+            and t.category2 = #{category2}
+        </if>
+        <if test="category3 != null and category3 != ''">
+            and t.category3 = #{category3}
+        </if>
+        <if test="clazzId != null and clazzId != ''">
+            and t.clazz_id = #{clazzId}
+        </if>
+        <if test="clazz != null and clazz != ''">
+            and t.clazz = #{clazz}
+        </if>
+        <if test="grade != null and grade != ''">
+            and t.grade = #{grade}
+        </if>
+        <if test="templateId != null and templateId != ''">
+            and t.template_id = #{templateId}
+        </if>
+        <if test="czyId != null and czyId != ''">
+            and t.czy_id = #{czyId}
+        </if>
+        <if test="czy != null and czy != ''">
+            and t.czy LIKE CONCAT('%',#{czy},'%')
+        </if>
+        <if test="schoolId != null and schoolId != ''">
+            and t.school_id = #{schoolId}
+        </if>
+        <if test="addTime != null and addTime != ''">
+            and t.add_time LIKE CONCAT('%',#{addTime},'%')
+        </if>
+        <if test="editTime != null and editTime != ''">
+            and t.edit_time = #{editTime}
+        </if>
+        <if test="imgs != null and imgs != ''">
+            and t.imgs = #{imgs}
+        </if>
+        <if test="teamId != null and teamId != ''">
+            and t.team_id = #{teamId}
+        </if>
+        <if test="teamName != null and teamName != ''">
+            and t.team_name = #{teamName}
+        </if>
+        <if test="totalScore != null and totalScore != ''">
+            and t.total_score = #{totalScore}
+        </if>
+        <if test="desc_ != null and desc_ != ''">
+            and t.desc_ = #{desc1}
+        </if>
+        <if test="schoolName != null and schoolName != ''">
+            and s.school_name LIKE CONCAT('%',#{schoolName},'%')
+        </if>
+        <if test="name != null and name != ''">
+            and tt.name = #{name}
+        </if>
+    </sql>
+
+    <sql id="columns">
+    	t.id, t.category1, t.category2, t.category3, t.clazz_id, t.clazz,t.teacher_id,t.teacher_name, t.grade, t.template_id, t.czy_id, t.czy, t.school_id, t.add_time, t.edit_time, t.imgs
+    	, t.team_id, t.team_name, t.total_score, t.desc_ as desc1
+    </sql>
+
+    <!-- 新增 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionLogs">
+		INSERT INTO t_inspection_logs (
+			id, category1, category2, category3, clazz_id, clazz,teacher_id,teacher_name, grade, template_id, czy_id, czy, school_id, add_time, edit_time, imgs,team_id,team_name,total_score, desc_
+		) VALUES (
+			#{id}, #{category1}, #{category2}, #{category3}, #{clazzId}, #{clazz}, #{teacherId} , #{teacherName} , #{grade}, #{templateId}, #{czyId}, #{czy}, #{schoolId}, #{addTime}, #{editTime}, #{imgs}, #{teamId}, #{teamName}, #{totalScore}, #{desc1}
+		)
+	</insert>
+
+    <!-- 查询所有-->
+    <select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionLogs">
+        SELECT
+        <include refid="columns"/>
+        FROM t_inspection_logs t
+    </select>
+
+    <!-- 条件查询-->
+    <select id="queryByMap" parameterType="hashmap"
+            resultType="cn.dofuntech.cis.admin.repository.domain.InspectionLogs">
+        SELECT
+        <include refid="columns"/>,
+        s.school_name as schoolName
+        FROM t_inspection_logs t
+        LEFT JOIN t_inspection_template tt ON tt.id=t.template_id
+        LEFT JOIN t_school_inf s ON s.id = t.school_id
+        <where>
+            <include refid="condition"/>
+            <if test="name!= null and name!= ''">
+                and tt.name = #{name}
+            </if>
+            <if test="ksTime != null and ksTime != ''">
+                and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ >= ]]> #{ksTime}
+            </if>
+            <if test="jsTime != null and jsTime != ''">
+                and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ <= ]]> #{jsTime}
+            </if>
+        </where>
+        order by t.add_time desc
+    </select>
+
+    <!-- 单对象查询-->
+    <select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionLogs">
+        SELECT
+        <include refid="columns"/>
+        FROM t_inspection_logs t
+        LEFT JOIN t_inspection_template tt ON tt.id=t.template_id
+        <where>
+            <include refid="condition"/>
+        </where>
+        limit 0,1
+    </select>
+
+
+    <!-- 班级年级日期查询 -->
+    <select id="querydate" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionLogs">
+        SELECT
+        <include refid="columns"/>
+        FROM t_inspection_logs t
+        <where>
+            1=1
+            <if test="clazz != null and clazz!= ''">
+                and t.clazz = #{clazz}
+            </if>
+            <if test="grade != null and grade!= ''">
+                and t.grade = #{grade}
+            </if>
+            <if test="category3 != null and category3!= ''">
+                and t.category3 = #{category3}
+            </if>
+            <if test="templateId!= null and templateId!= ''">
+                and t.template_id = #{templateId}
+            </if>
+            <if test="monday != null and monday != ''">
+                and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ >= ]]> #{monday}
+            </if>
+
+            <if test="sunday != null and sunday != ''">
+                and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ <= ]]> #{sunday}
+            </if>
+        </where>
+    </select>
+
+    <!--根据模板每一日数据统计  -->
+
+    <select id="queryOnedate" parameterType="hashmap"
+            resultType="cn.dofuntech.cis.admin.repository.domain.InspectionLogs">
+        SELECT
+        <include refid="columns"/>
+        FROM t_inspection_logs t where
+        template_id = #{templateId} and DATE_FORMAT(add_time,'%Y-%m-%d') = #{day}
+
+
+    </select>
+
+    <!--模板每一日数据统计  -->
+
+    <select id="queryOnedateAll" parameterType="hashmap"
+            resultType="cn.dofuntech.cis.admin.repository.domain.InspectionLogs">
+        SELECT
+        <include refid="columns"/>
+        FROM t_inspection_logs t where
+        DATE_FORMAT(add_time,'%Y-%m-%d') = #{day}
+    </select>
+
+
+    <!-- 更新-->
+    <update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionLogs">
+		UPDATE t_inspection_logs 
+		SET
+		id=#{id}, category1=#{category1}, category2=#{category2}, category3=#{category3}, clazz_id=#{clazzId},teacher_id=#{teacherId} ,teacher_name=#{teacherName} , clazz=#{clazz}, grade=#{grade}, template_id=#{templateId}, czy_id=#{czyId}, czy=#{czy}, school_id=#{schoolId}, add_time=#{addTime}, edit_time=#{editTime}, imgs=#{imgs}
+		, team_id=#{teamId}, team_name=#{teamName}, total_score=#{totalScore}
+		WHERE
+		id=#{id}
+	</update>
+
+    <!-- 删除-->
+    <delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionLogs">
+		DELETE FROM t_inspection_logs 
+		WHERE
+		id=#{id}
+	</delete>
+
+</mapper>

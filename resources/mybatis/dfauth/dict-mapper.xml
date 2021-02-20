@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.dfauth.repository.mapper.DictMapper">
+	
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.dict_id = #{id}
+			</if>
+			<if test="parentId != null and parentId != ''">
+			  and t.parent_id = #{parentId}
+			</if>
+			<if test="dictCode != null and dictCode != ''">
+			  and t.dict_code = #{dictCode}
+			</if>
+			<if test="dictValue != null and dictValue != ''">
+			  and t.dict_value = #{dictValue}
+			</if>
+			<if test="dictName != null and dictName != ''">
+			  and t.dict_name = #{dictName}
+			</if>
+			<if test="seqNum != null and seqNum != ''">
+			  and t.seq_num = #{seqNum}
+			</if>
+			<if test="hlp != null and hlp != ''">
+			  and t.hlp = #{hlp}
+			</if>
+			<if test="dictLevel != null and dictLevel != ''">
+			  and t.dict_level = #{dictLevel}
+			</if>
+			<if test="status != null and status != ''">
+			  and t.status = #{status}
+			</if>
+			<if test="addtime != null and addtime != ''">
+			  and t.addtime = #{addtime}
+			</if>
+			<if test="edittime != null and edittime != ''">
+			  and t.edittime = #{edittime}
+			</if>
+	</sql>
+	
+    <sql id="columns">
+    	t.dict_id, t.parent_id, t.dict_code, t.dict_value, t.dict_name, t.seq_num, t.hlp, t.dict_level, t.status, t.addtime, t.edittime
+    </sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.dfauth.bean.Dict">
+		INSERT INTO t_dict (
+			dict_id, parent_id, dict_code, dict_value, dict_name, seq_num, hlp, dict_level, status, addtime, edittime
+		) VALUES (
+			#{dictId}, #{parentId}, #{dictCode}, #{dictValue}, #{dictName}, #{seqNum}, #{hlp}, #{dictLevel}, #{status}, #{addtime}, #{edittime}
+		)
+	</insert>
+	
+	<!-- 新增 -->
+	<insert id="insertReturnId" useGeneratedKeys="true" keyProperty="dictId" parameterType="cn.dofuntech.dfauth.bean.Dict">
+		INSERT INTO t_dict (
+			dict_id, parent_id, dict_code, dict_value, dict_name, seq_num, hlp, dict_level, status, addtime, edittime
+		) VALUES (
+			#{dictId}, #{parentId}, #{dictCode}, #{dictValue}, #{dictName}, #{seqNum}, #{hlp}, #{dictLevel}, #{status}, #{addtime}, #{edittime}
+		)
+	</insert>
+	
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.dfauth.bean.Dict">
+		SELECT
+		<include refid="columns"/>
+		FROM t_dict t
+	</select>
+	
+	<!-- 查询所有 >>> Map-->
+	<select id="queryMap" resultType="map">
+		SELECT
+		<include refid="columns"/>
+		FROM t_dict t
+	</select>
+	
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.dfauth.bean.Dict">
+		SELECT
+		<include refid="columns"/>
+		FROM t_dict t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+	
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.dfauth.bean.Dict">
+		UPDATE t_dict 
+		SET
+		dict_id=#{dictId}, parent_id=#{parentId}, dict_code=#{dictCode}, dict_value=#{dictValue}, dict_name=#{dictName}, seq_num=#{seqNum}, hlp=#{hlp}, dict_level=#{dictLevel}, status=#{status}, addtime=#{addtime}, edittime=#{edittime}
+		WHERE
+		dict_id=#{dictId}
+	</update>
+	
+	<!-- 更新状态-->
+	<update id="updateStatus" parameterType="cn.dofuntech.dfauth.bean.Dict">
+		UPDATE t_dict 
+		SET
+		status=#{status}
+		WHERE
+		dict_id=#{dictId}
+	</update>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.dfauth.bean.Dict">
+		DELETE FROM t_dict 
+		WHERE
+		dict_id=#{dictId}
+	</delete>
+	
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.dfauth.bean.Dict">
+		SELECT
+		<include refid="columns"/>
+		FROM t_dict t
+		<where>
+		<include refid="condition" />
+		</where>
+	</select>
+	
+	<!-- selectDictBySeqNumMax-->
+	<select id="selectDictBySeqNumMax" parameterType="cn.dofuntech.dfauth.bean.Dict" resultType="java.lang.Integer">
+		SELECT MAX(CAST(SEQ_NUM AS SIGNED))  FROM t_dict t where STATUS = 1 
+		<if test="parentId != null and parentId != ''">
+			  and t.parent_id = #{parentId}
+		</if>
+	</select>
+	
+	<!-- selectDictByDictIdMax-->
+	<select id="selectDictByDictIdMax"  resultType="int">
+		SELECT MAX(CAST(DICT_ID AS SIGNED)) FROM  t_dict WHERE STATUS  = 1 
+	</select>
+	
+</mapper>

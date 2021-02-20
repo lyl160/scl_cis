@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.NoticeMapper">
+	
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="title != null and title != ''">
+			  and t.title = #{title}
+			</if>
+			<if test="content != null and content != ''">
+			  and t.content = #{content}
+			</if>
+			<if test="type != null and type != ''">
+			  and t.type = #{type}
+			</if>
+			<if test="userId != null and userId != ''">
+			  and t.user_id = #{userId}
+			</if>
+			<if test="isread != null and isread != ''">
+			  and t.isread = #{isread}
+			</if>
+			<if test="readtime != null and readtime != ''">
+			  and t.readtime = #{readtime}
+			</if>
+			<if test="addtime != null and addtime != ''">
+			  and t.addtime = #{addtime}
+			</if>
+			<if test="edittime != null and edittime != ''">
+			  and t.edittime = #{edittime}
+			</if>
+			<if test="dutyDate != null and dutyDate != ''">
+			  and t.duty_date = #{dutyDate}
+			</if>
+			<if test="schoolId != null and schoolId != ''">
+			  and t.school_id  = #{schoolId}
+			</if>
+	</sql>
+	
+    <sql id="columns">
+    	t.id, t.title, t.content, t.type, t.user_id, t.isread, t.readtime, t.addtime, t.edittime,t.duty_date,t.school_id
+    </sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.Notice">
+		INSERT INTO t_notice (
+			id, title, content, type, user_id, isread, readtime, addtime, edittime,duty_date,
+		school_id) VALUES (
+			#{id}, #{title}, #{content}, #{type}, #{userId}, #{isread}, #{readtime}, #{addtime}, #{edittime}, #{dutyDate},#{schoolId}
+		)
+	</insert>
+	
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.Notice">
+		SELECT
+		<include refid="columns"/>
+		FROM t_notice t
+	</select>
+	
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.Notice">
+		SELECT
+		<include refid="columns"/>,u.USER_NAME userName
+		FROM t_notice t
+		LEFT JOIN auth_user_inf u ON u.id = t.user_id
+		<where>
+		<include refid="condition" />
+		</where>
+		ORDER BY t.addtime DESC
+	</select>
+	
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.Notice">
+		SELECT
+		<include refid="columns"/>
+		FROM t_notice t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+	
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.Notice">
+		UPDATE t_notice 
+		SET
+		id=#{id}, title=#{title}, content=#{content}, type=#{type}, user_id=#{userId}, isread=#{isread}, readtime=#{readtime}, addtime=#{addtime}, edittime=#{edittime},school_id  = #{schoolId}
+		, duty_date=#{dutyDate}
+		WHERE
+		id=#{id}
+	</update>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.Notice">
+		DELETE FROM t_notice 
+		<where>
+		    1=1
+			<if test="id != null and id != ''">
+				  and id=#{id}
+			</if>
+			<if test="userId != null and userId != ''">
+				  and user_id = #{userId}
+			</if>
+		</where>
+	</delete>
+	
+	<!-- 所有通知已读更新-->
+	<update id="upAllStatus" parameterType="hashmap">
+		UPDATE t_notice 
+		SET
+		isread='1', readtime=NOW(),  edittime=NOW()
+		WHERE
+		user_id=#{userId}
+	</update>
+</mapper>

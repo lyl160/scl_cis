@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<project name="fsfn" basedir="." default="deployAndReload">
+	<property file="build.properties" />
+	<property name="dist.dir" value="dist"/>
+ 	<property name="build.dir" value="build"/>	
+ 	<property name="jdk.home" value="/usr/lib/jvm/default-java"/>	
+ 	<property name="tomcat.home" value="/home/dofuntech/apache-tomcat-jenkins"/>	
+ 	
+	<path id="classpath">
+		<fileset dir="${lib.dir}" includes="*.jar *.zip" />
+		<fileset dir="${tomcat.home}/lib" includes="*.jar *.zip" />
+		<pathelement path="${build.dir}" />
+	</path>
+	
+	
+	<!-- &&&&&& 编译程序部分 &&&&&&-->
+	<target name="compile" description="Compile main source tree java files">
+		<!-- 编译文件保存目录 -->
+		<mkdir dir="${build.dir}/classes" />
+				
+		<javac destdir="${build.dir}/classes" includeantruntime="false" debug="true" optimize="false" deprecation="false" failonerror="true">
+			<!-- 编译文件所在的目录 -->
+			<src path="${src.dir}" />
+			<compilerarg line="-encoding UTF-8 -XDignore.symbol.file"/>
+			<classpath refid="classpath" />
+		</javac>
+
+		<!-- Copy XML, Properties files to ${build.dir}/classes -->
+		<copy todir="${build.dir}/classes"> <!-- 拷贝的所需目录 -->
+				<!-- 所要拷贝的内容 -->
+			<fileset dir="${resource.dir}" includes="**/*.xml" />
+			<fileset dir="${resource.dir}" includes="**/*.properties" />
+		</copy>
+	</target>
+	<!-- 编译结束 -->
+
+			<!--编译之后的工作 -->
+	<target name="war" depends="compile" description="Packages app as WAR">
+		<war destfile="${dist.dir}/${webapp.name}.war" webxml="${web.dir}/WEB-INF/web.xml" compress="true">
+			<classes dir="${build.dir}/classes" />
+			<fileset dir="${web.dir}"/>
+			<!-- <lib dir="${lib.dir}">
+				<exclude name="**/servlet-api.jar" />
+			</lib> -->
+		</war>
+	</target>
+	
+	<target name="deployAndReload" description="Remove and Install web application" depends="clean,war">   
+	</target> 
+
+	<target name="clean" description="Clean output directories">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+	</target>
+	    
+	<patternset id="war.files">
+		<include name="**/*.*" />
+		<exclude name="**/servlet-api*.jar" />
+	</patternset>
+
+</project>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.ClazzInfMapper">
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="clazz != null and clazz != ''">
+			  and t.clazz = #{clazz}
+			</if>
+			<if test="grade != null and grade != ''">
+			  and t.grade = #{grade}
+			</if>
+			<if test="headerTeacher != null and headerTeacher != ''">
+			  and t.header_teacher = #{headerTeacher}
+			</if>
+			<if test="totalPeo != null and totalPeo != ''">
+			  and t.total_peo = #{totalPeo}
+			</if>
+			<if test="logo != null and logo != ''">
+			  and t.logo = #{logo}
+			</if>
+			<if test="slogan != null and slogan != ''">
+			  and t.slogan = #{slogan}
+			</if>
+			<if test="readme != null and readme != ''">
+			  and t.readme = #{readme}
+			</if>
+			<if test="schoolId != null and schoolId != ''">
+			  and t.school_id = #{schoolId}
+			</if>
+			<if test="addTime != null and addTime != ''">
+			  and t.add_time = #{addTime}
+			</if>
+			<if test="editTime != null and editTime != ''">
+			  and t.edit_time = #{editTime}
+			</if>
+			<if test="teamId != null and teamId != ''">
+			  and t.team_id = #{teamId}
+			</if>
+			
+			<if test="status != null and status != ''">
+			  and t.status = #{status}
+			</if>
+			
+			<if test="h_id != null and h_id != ''">
+			  and t.h_id = #{h_id}
+			</if>
+			<if test="upgrade != null and upgrade != ''">
+			  and t.upgrade = #{upgrade}
+			</if>
+	</sql>
+	
+    <sql id="columns">
+    	t.id, t.clazz, t.grade, t.header_teacher, t.total_peo, t.logo, t.slogan, t.readme, t.school_id, t.add_time, t.edit_time, t.team_id, t.status, t.h_id, t.upgrade 
+    </sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.ClazzInf">
+		INSERT INTO t_clazz_inf (
+			id, clazz, grade, header_teacher, total_peo, logo, slogan, readme, school_id, add_time, edit_time, team_id,status,h_id,upgrade
+		) VALUES (
+			#{id}, #{clazz}, #{grade}, #{headerTeacher}, #{totalPeo}, #{logo}, #{slogan}, #{readme}, #{schoolId}, #{addTime}, #{editTime}, #{teamId},#{status},#{hid},#{upgrade}
+		)
+	</insert>
+	
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.ClazzInf">
+		SELECT
+		<include refid="columns"/>,
+		s.team_name teamName
+		FROM t_clazz_inf t
+		LEFT JOIN t_team s ON t.team_id = s.id
+	</select>
+	
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.ClazzInf">
+		SELECT
+		<include refid="columns"/>
+        ,logs1.num num1 ,logs2.num num2
+		FROM t_clazz_inf t
+        left join (
+        SELECT clazz_id,count(*) num
+        FROM t_inspection_logs
+        where DATE_FORMAT(add_time,'%Y-%m-%d') = DATE_FORMAT(now(),'%Y-%m-%d')
+              <if test="schoolId != null and schoolId != ''"> and template_id=(select id from t_inspection_template where school_id=#{schoolId} and name='校务巡查') </if>
+              <if test="category2 != null and category2 != ''">and category2 = #{category2} </if>
+        group by clazz_id,DATE_FORMAT(add_time,'%Y-%m-%d')
+        ) logs1 on logs1.clazz_id=t.id
+        left join (
+        SELECT clazz_id,count(*) num
+        FROM t_inspection_logs
+        where DATE_FORMAT(add_time,'%Y-%m-%d') = DATE_FORMAT(now(),'%Y-%m-%d')
+            <if test="schoolId != null and schoolId != ''"> and template_id=(select id from t_inspection_template where school_id=#{schoolId} and name='后勤巡查') </if>
+            <if test="category2 != null and category2 != ''">and category2 = #{category2} </if>
+        group by clazz_id,DATE_FORMAT(add_time,'%Y-%m-%d')
+        ) logs2 on logs2.clazz_id=t.id
+		<where>
+		<include refid="condition" />
+		</where>
+		ORDER BY t.school_id asc,t.team_id asc,t.clazz asc
+	</select>
+	
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.ClazzInf">
+		SELECT
+		<include refid="columns"/>
+		FROM t_clazz_inf t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+	
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.ClazzInf">
+		UPDATE t_clazz_inf 
+		SET
+		id=#{id}, clazz=#{clazz}, grade=#{grade}, header_teacher=#{headerTeacher}, total_peo=#{totalPeo}, logo=#{logo}, slogan=#{slogan}, readme=#{readme}, school_id=#{schoolId}, add_time=#{addTime}, edit_time=#{editTime}
+		, team_id=#{teamId},status=#{status},h_id=#{hid},upgrade=#{upgrade}
+		WHERE
+		id=#{id}
+	</update>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.ClazzInf">
+		DELETE FROM t_clazz_inf 
+		WHERE
+		id=#{id}
+	</delete>
+	
+</mapper>

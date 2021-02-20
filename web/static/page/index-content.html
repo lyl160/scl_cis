@@ -1,0 +1,89 @@
+<meta charset="utf-8" />
+
+<script type="text/javascript">
+	$(function() {
+		var rdata = loadReportData("mpomng/report/003.do");
+		var chart = new iChart.Column2D({
+			render : 'canvasOrderDiv',
+			data : rdata,
+			title : {
+				text : '收款订单交易统计（单位:万元）',
+				color : '#3e576f',
+				font : "微软雅黑",
+				offsetx:-300
+			},
+			footnote : {
+				text : '汉富宝支付',
+				color : '#909090',
+				fontsize : 11,
+				padding : '0 38'
+			},
+			width : 1115,
+			height : 400,
+			label : {
+				fontsize : 11,
+				color : '#666666'
+			},
+			animation : true,//开启过渡动画
+			animation_duration : 800,//800ms完成动画
+			shadow : true,
+			shadow_blur : 2,
+			shadow_color : '#aaaaaa',
+			shadow_offsetx : 1,
+			shadow_offsety : 0,
+			column_width : 35,
+			sub_option : {
+				listeners : {
+					parseText : function(r, t) {
+						return t + "";
+					}
+				},
+				label : {
+					fontsize : 11,
+					fontweight : 600,
+					color : '#4572a7'
+				},
+				border : {
+					width : 2,
+					color : '#ffffff'
+				}
+			},
+			coordinate : {
+				background_color : null,
+				grid_color : '#c0c0c0',
+				width : 1000,
+				axis : {
+					color : '#c0d0e0',
+					width : [ 0, 0, 1, 0 ]
+				},
+				scale : [ {
+					position : 'left',
+					start_scale : 0,
+					end_scale : 100,
+					scale_space : 1500,
+					scale_enable : false,
+					label : {
+						fontsize : 11,
+						color : '#666666'
+					}
+				} ]
+			}
+		});
+		chart.draw();
+	});
+
+</script>
+<h4 class="row header smaller lighter red">
+		<span class="col-sm-8">
+		<i class="ace-icon fa fa-bar-chart-o"></i> 交易统计
+	</span>
+	<span class="col-sm-4">
+		<label class="pull-right inline">
+		实时：
+		<input id="gritter-light" class="ace ace-switch ace-switch-5" type="checkbox" checked="">
+		<span class="lbl middle"></span>
+		</label>
+		</span>
+</h4>
+<div id='canvasOrderDiv'
+	style="float: left; display: inline; margin-bottom: 15px"></div>

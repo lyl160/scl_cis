@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- - Configuration Repository and Service layers -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:amq="http://activemq.apache.org/schema/core"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		 http://activemq.apache.org/schema/core
+        http://activemq.apache.org/schema/core/activemq-core-5.8.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:property-placeholder location="classpath*:*.properties" />
+	<!-- Web Configuration -->  
+	<util:properties id="properties" location="classpath:config.properties" />
+	 
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="${jdbc.driverClassName}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="idleConnectionTestPeriod" value="${pool.c3p0.idle_connection_test_period}" />
+		<property name="testConnectionOnCheckin" value="${pool.c3p0.test_connection_on_checkin}" />
+		<property name="preferredTestQuery" value="${pool.c3p0.preferred_test_query}" />
+		<property name="maxIdleTime" value="${pool.c3p0.max_idle_time}" />
+		<property name="properties">
+			<props>
+				<prop key="user">${jdbc.username}</prop>
+				<prop key="password">${jdbc.password}</prop>
+				<prop key="c3p0.acquire_increment">${pool.c3p0.acquire_increment}</prop>
+				<prop key="c3p0.max_size">${pool.c3p0.max_size}</prop>
+				<prop key="c3p0.min_size">${pool.c3p0.min_size}</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<!-- Beans -->
+	<bean id="dialect" class="cn.dofuntech.core.jdbc.dialect.MySQLDialect" />
+	<bean id="cacheManager" class="cn.dofuntech.core.cache.impl.LocalCacheManagerImpl" />
+	<bean id="envUtil" class="cn.dofuntech.cis.api.util.EnvUtil"></bean>
+    <bean id="springContextUtil" class="cn.dofuntech.core.util.spring.SpringContextUtil"></bean>
+
+	<!-- Service -->
+	<context:component-scan base-package="cn.dofuntech.*.**.service" />
+
+	<!-- enable autowire -->
+	<context:annotation-config />
+
+
+	<!-- Transaction manager for a single JDBC DataSource -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+		p:dataSource-ref="dataSource" />
+
+ 	<!-- 事务管理拦截器 Begin 事务管理 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="*InIsolatedTx" propagation="REQUIRES_NEW"/>
+            <tx:method name="get*" propagation="NOT_SUPPORTED"/>
+            <tx:method name="find*" propagation="NOT_SUPPORTED"/>
+            <tx:method name="create*"  propagation="REQUIRED" />
+            <tx:method name="save*" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED"/>
+            <tx:method name="del*" propagation="REQUIRED"/>
+            <tx:method name="cancel*" propagation="REQUIRED"/>
+            <tx:method name="do*" propagation="REQUIRED"/>
+            <tx:method name="*"  rollback-for="java.lang.Exception" />
+        </tx:attributes>
+    </tx:advice>
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut="execution(* cn.dofuntech.cis.**.service.impl.*.*(..))"/>
+    </aop:config>
+	<!-- JDBC: JdbcTemplate -->
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="dataSource" />
+	</bean>
+
+	<!-- JDBC: NamedParameter JdbcTemplate -->
+	<bean id="namedParameterJdbcTemplate"
+		class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
+		<constructor-arg ref="dataSource" />
+	</bean>
+	
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+       <constructor-arg index="0" ref="sqlSessionFactory" />
+    </bean>
+
+	<!-- MyBatis: define the SqlSessionFactory -->
+	 <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configLocation" value="classpath:mybatis-config.xml" />
+        <property name="mapperLocations">
+            <list>
+                <value>classpath:mybatis/curd/*-mapper.xml</value>
+                <value>classpath:mybatis/custom/*-mapper.xml</value>
+                <value>classpath:mybatis/dfauth/*.xml</value>
+            </list>
+        </property>
+        <property name="typeAliasesPackage" value="cn.dofuntech.cis.**.domain;cn.dofuntech.cis.**.bean" />
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+	<!-- MyBatis: scan for mappers and let them be autowired -->
+	 <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+       	<property name="sqlSessionTemplateBeanName" value="sqlSession"/>
+        <property name="basePackage" value="cn.dofuntech.cis.**.mapper" />
+        <property name="annotationClass" value="org.springframework.stereotype.Repository" />
+    </bean>
+
+    <!-- redis配置信息 start -->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxActive" value="${redis.pool.maxActive}" />
+        <property name="maxIdle" value="${redis.pool.maxIdle}" />
+        <property name="maxWait" value="${redis.pool.maxWait}" />
+        <property name="testOnBorrow" value="${redis.pool.testOnBorrow}" />
+    </bean>   
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+        <constructor-arg index="0" ref="jedisPoolConfig" />
+        <constructor-arg index="1" value="${redis.server}" />
+        <constructor-arg index="2" value="${redis.port}" type="int" />
+        <constructor-arg index="3" value="60000" type="int" />
+        <constructor-arg index="4" value="${redis.password}" />
+    </bean>
+
+    <bean id="jedisService" class="cn.dofuntech.cis.api.util.JedisService">
+        <property name="jedisPool" ref="jedisPool"></property>
+    </bean>
+    <!-- redis配置信息 end -->
+    
+    
+    <bean id="ActivemqService" class="cn.dofuntech.cis.api.util.ActivemqService" />
+        
+    <!--  <bean id="amqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <constructor-arg index="0" value="${broker.url}"/>
+        <property name="useAsyncSend" value="true"/>
+    </bean> -->
+    
+    <amq:connectionFactory id="amqConnectionFactory" 
+        brokerURL="${broker.url}" 
+        userName="" 
+        password="" />
+    
+    <!-- 配置JMS连接工长 -->
+    <bean id="connectionFactory"
+        class="org.springframework.jms.connection.CachingConnectionFactory">
+        <constructor-arg ref="amqConnectionFactory" />
+        <property name="sessionCacheSize" value="100" />
+    </bean>
+    
+    <!-- 定义消息队列（Queue） -->
+    <bean id="demoQueueDestination" class="org.apache.activemq.command.ActiveMQQueue">
+        <!-- 设置消息队列的名字 -->
+        <constructor-arg>
+            <value>${queue.name}</value>
+        </constructor-arg>
+    </bean>
+    
+    <!-- 配置JMS模板（Queue），Spring提供的JMS工具类，它发送、接收消息。 -->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="defaultDestination" ref="demoQueueDestination" />
+        <property name="receiveTimeout" value="10000" />
+        <!-- true是topic，false是queue，默认是false，此处显示写出false -->
+        <property name="pubSubDomain" value="false" />
+    </bean>
+    
+    
+</beans>

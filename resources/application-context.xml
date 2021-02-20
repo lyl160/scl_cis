@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+	<context:annotation-config />
+
+	<context:component-scan base-package="cn.dofuntech.dfauth.util">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+
+	<context:property-placeholder location="classpath:api.properties"/>
+	
+	<bean id="shieldSyncApp" class="cn.dofuntech.dfauth.util.ShieldSyncApp">
+		 <constructor-arg name="appId" value="${api.appId}"></constructor-arg>
+		 <constructor-arg name="appSecret" value="${api.appSecret}"></constructor-arg>
+		 <constructor-arg name="host" value="${api.host}"></constructor-arg>
+		 <constructor-arg name="httpPort" value="${api.httpPort}"></constructor-arg>
+		 <constructor-arg name="httpsPort" value="${api.httpsPort}"></constructor-arg>
+		 <constructor-arg name="publicKey" value="${api.publicKey}"></constructor-arg>
+	</bean>
+</beans>

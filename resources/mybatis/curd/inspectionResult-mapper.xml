@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cn.dofuntech.cis.admin.repository.mapper.InspectionResultMapper">
+
+	<sql id="condition">
+			<if test="id != null and id != ''">
+			   t.id = #{id}
+			</if>
+			<if test="logsId != null and logsId != ''">
+			  and t.logs_id = #{logsId}
+			</if>
+			<if test="attrId != null and attrId != ''">
+			  and t.attr_id = #{attrId}
+			</if>
+			<if test="attrName != null and attrName != ''">
+			  and t.attr_name = #{attrName}
+			</if>
+			<if test="attrValue != null and attrValue != ''">
+			  and t.attr_value = #{attrValue}
+			</if>
+			<if test="addTime != null and addTime != ''">
+			  and t.add_time LIKE CONCAT('%',#{addTime},'%')
+			</if>
+			<if test="editTime != null and editTime != ''">
+			  and t.edit_time = #{editTime}
+			</if>
+			<if test="itemScore != null and itemScore != ''">
+			  and t.item_score = #{itemScore}
+			</if>
+			<if test="itemCode != null and itemCode != ''">
+			  and t.item_code = #{itemCode}
+			</if>
+			<if test="schoolId != null and schoolId != ''">
+			  and t.school_id  = #{schoolId}
+			</if>
+	</sql>
+
+    <sql id="columns">
+    	t.id, t.logs_id, t.attr_id, t.attr_name, t.attr_value, t.add_time, t.edit_time, t.item_score, t.item_code,t.school_id
+    </sql>
+
+	<!-- 新增 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionResult">
+		INSERT INTO t_inspection_result (
+			id, logs_id, attr_id, attr_name, attr_value, add_time, edit_time, item_score, item_code,
+		school_id) VALUES (
+			#{id}, #{logsId}, #{attrId}, #{attrName}, #{attrValue}, #{addTime}, #{editTime}, #{itemScore}, #{itemCode},#{schoolId}
+		)
+	</insert>
+
+	<!-- 查询所有-->
+	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionResult">
+		SELECT
+		<include refid="columns"/>
+		FROM t_inspection_result t
+	</select>
+
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionResult">
+		SELECT
+		<include refid="columns"/>
+		FROM t_inspection_result t
+		<where>
+		<include refid="condition" />
+		</where>
+	</select>
+
+	<!-- 条件查询-->
+	<select id="queryCPR" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionResult">
+		SELECT
+		<include refid="columns"/>
+		FROM t_inspection_result t
+		 where
+		 t.logs_id = #{logsId}
+
+	</select>
+
+	<!-- 单对象查询-->
+	<select id="get" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionResult">
+		SELECT
+		<include refid="columns"/>
+		FROM t_inspection_result t
+		<where>
+		<include refid="condition" />
+		</where>
+		limit 0,1
+	</select>
+
+	<!-- 更新-->
+	<update id="update" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionResult">
+		UPDATE t_inspection_result 
+		SET
+		id=#{id}, logs_id=#{logsId}, attr_id=#{attrId}, attr_name=#{attrName}, attr_value=#{attrValue}, add_time=#{addTime}, edit_time=#{editTime}, item_score=#{itemScore}, item_code=#{itemCode},school_id  = #{schoolId}
+		WHERE
+		id=#{id}
+	</update>
+
+	<!-- 删除-->
+	<delete id="delete" parameterType="cn.dofuntech.cis.admin.repository.domain.InspectionResult">
+		DELETE FROM t_inspection_result 
+		WHERE
+		id=#{id}
+	</delete>
+	<!-- 查询评价次数 -->
+	<select id="queryNum" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionResult">
+		SELECT t.id,t.attr_id,t.attr_name,t.attr_value,t.item_code
+		<if test="hxd != null and hxd != ''">
+		,a.category2,c.value categoryName,d.dict_name
+		</if>
+		,sum(item_score) num
+		 FROM t_inspection_result t
+		LEFT JOIN t_inspection_logs a ON a.id = t.logs_id
+		LEFT JOIN t_dynamic_attr b ON b.id = t.attr_id
+		LEFT JOIN t_inspection_template tt ON tt.id = a.template_id
+		<if test="hxd != null and hxd != ''">
+		LEFT JOIN t_inspection_category c ON c.id = b.seq
+		LEFT JOIN t_dict d ON d.dict_value = t.item_code AND d.dict_code = 'ITEMCODE' AND d.dict_level = '2'
+		</if>
+		WHERE a.clazz_id = #{clazzId}
+		<if test="schoolId != null and schoolId != ''">
+			 AND a.school_id  = #{schoolId}
+		</if>
+		<if test="templateName != null and templateName != ''">
+			 AND tt.name  = #{templateName}
+		</if>
+		<if test="itemCode != null and itemCode != ''">
+			 AND t.item_code  = #{itemCode}
+		</if>
+		<if test="monday != null and monday != ''">
+			 and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ >= ]]> #{monday}
+		</if>
+		<if test="sunday != null and sunday != ''">
+			 and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ <= ]]> #{sunday}
+		</if>
+		GROUP BY
+		<if test="hxd != null and hxd != ''">
+		t.item_code,
+		</if>
+        t.attr_id,t.attr_value
+        order by
+        <if test="hxd != null and hxd != ''">
+            t.item_code,
+        </if>
+        t.attr_id,t.attr_value
+	</select>
+
+	<!-- 查询后台统计报表 -->
+	<select id="querySum" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionResult">
+		SELECT
+			t.id,
+			t.attr_id,
+			t.attr_name,
+			t.attr_value,
+			t.item_score,
+            a.clazz_id,
+			a.clazz,
+			s.school_name,
+		SUM(t.item_score) as sum
+		FROM
+			t_inspection_result t
+		LEFT JOIN t_inspection_logs a ON a.id = t.logs_id
+				LEFT JOIN t_dynamic_attr b ON b.id = t.attr_id
+				LEFT JOIN t_inspection_category c ON c.id = b.seq
+				LEFT JOIN t_school_inf s ON a.school_id = s.id
+		WHERE
+        1=1
+        <if test="schoolId != null and schoolId != ''">
+            AND t.school_id  = #{schoolId}
+        </if>
+        <if test="clazzId != null and clazzId != ''">
+            AND a.clazz_id = #{clazzId}
+        </if>
+		<if test="templateId != null and templateId != ''">
+			 AND a.template_id  = #{templateId}
+		</if>
+		<if test="itemCode != null and itemCode != ''">
+			 AND t.item_code  = #{itemCode}
+		</if>
+		<if test="ksTime != null and ksTime != ''">
+			 and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ >= ]]> #{ksTime}
+		</if>
+        <if test="jsTime != null and jsTime != ''">
+            and DATE_FORMAT(t.add_time,'%Y-%m-%d') <![CDATA[ <= ]]> #{jsTime}
+        </if>
+		<if test="schoolName != null and schoolName != ''">
+			 and s.school_name LIKE CONCAT('%',#{schoolName},'%')
+		</if>
+			GROUP BY
+		t.attr_id,a.clazz_id
+        order by t.attr_id,a.clazz_id
+	</select>
+</mapper>
