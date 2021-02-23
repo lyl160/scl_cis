@@ -1,13 +1,13 @@
 package cn.dofuntech.test;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 
 /**
  * <p>
@@ -44,7 +44,7 @@ public class MockData4Order extends BaseJunit4Test {
 //        catch (Exception e) {
 //            e.printStackTrace();
 //        }
-        System.out.println("%E6%95%A3%E8%A3%85%EF%BC%88%E6%B4%8B%EF%BC%89%E9%B8%A1%E8%9B%8B".startsWith("%"));
+//        System.out.println("%E6%95%A3%E8%A3%85%EF%BC%88%E6%B4%8B%EF%BC%89%E9%B8%A1%E8%9B%8B".startsWith("%"));
         System.out.println(URLDecoder.decode("%E6%95%A3%E8%A3%85%EF%BC%88%E6%B4%8B%EF%BC%89%E9%B8%A1%E8%9B%8B","UTF-8"));
     }
 
