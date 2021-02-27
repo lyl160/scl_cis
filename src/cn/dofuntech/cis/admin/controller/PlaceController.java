@@ -33,16 +33,18 @@ import cn.dofuntech.cis.admin.service.PlaceService;
 
 @Controller
 @RequestMapping("/place")
-public class PlaceController extends AdminController<Place>{
-	
-	@Resource
-	private PlaceService placeService;
-	/**
+public class PlaceController extends AdminController<Place> {
+
+    @Resource
+    private PlaceService placeService;
+
+    /**
      * 根据学校id查询所有地点
      */
-    
+
     @RequestMapping(value = "/queryAll")
-    public @ResponseBody Map<String, Object> query(@RequestParam Map<String, Object> params, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "rows", required = false) Integer rows) {
+    public @ResponseBody
+    Map<String, Object> query(@RequestParam Map<String, Object> params, @RequestParam(value = "page", required = false) Integer page, @RequestParam(value = "rows", required = false) Integer rows) {
         Map<String, Object> result = new HashMap<String, Object>();
         //  params.put("s_orgid",getUserInSession().getOrgId());
         if (page == null) {
@@ -53,9 +55,8 @@ public class PlaceController extends AdminController<Place>{
         }
         UAI uai = ((UAI) getRequest().getSession().getAttribute("UID"));
         //大校长为9可以查看所有的模板
-        if(!uai.getRoleId().equals("9"))
-        {
-        	 params.put("schoolId",uai.getAgentId());
+        if (!uai.getRoleId().equals("9")) {
+            params.put("schoolId", uai.getAgentId());
         }
         params.put("userId", "1");
         Paginator paginator = new Paginator(page, rows);
@@ -68,9 +69,10 @@ public class PlaceController extends AdminController<Place>{
 
         return result;
     }
-    
+
     @RequestMapping(value = "/save1", method = RequestMethod.POST)
-    public @ResponseBody Map<String, Object> save(@ModelAttribute Place entity) {
+    public @ResponseBody
+    Map<String, Object> save(@ModelAttribute Place entity) {
         Map<String, Object> result = new HashMap<String, Object>();
 
         if (!(entity instanceof AutoIdEntity)) {
@@ -80,47 +82,45 @@ public class PlaceController extends AdminController<Place>{
         try {
 
             AutoIdEntity baseEntity = (AutoIdEntity) entity;
-            Timestamp date = new Timestamp(System.currentTimeMillis()); 
-            Map<String,Object> map = new HashMap<String,Object>();
+            Timestamp date = new Timestamp(System.currentTimeMillis());
+            Map<String, Object> map = new HashMap<String, Object>();
             if (baseEntity.getId() == null || baseEntity.getId() == 0) {
-            	
+
                 logger.debug("entity.id 为空，新增");
                 entity.setAddTime(date);
                 doProcessBeforeSave(entity);
-                if(entity.getDefaultFlag().equals("0000")){
-                	map.put("userId", "1");
-                	List<Place> list = placeService.query(map);
-                	for(Place li:list){
-                		li.setUserId(1L);
-                		li.setDefaultFlag("1");
-                		li.setEditTime(date);
-                		placeService.update(li);
-                	}
+                if (entity.getDefaultFlag().equals("0000")) {
+                    map.put("userId", "1");
+                    List<Place> list = placeService.query(map);
+                    for (Place li : list) {
+                        li.setUserId(1L);
+                        li.setDefaultFlag("1");
+                        li.setEditTime(date);
+                        placeService.update(li);
+                    }
                 }
                 placeService.insert(entity);
-            }
-            else {
-            	
+            } else {
+
                 logger.debug("entity.id = " + baseEntity.getId() + ", 修改");
                 Place entityInDB = service.get(baseEntity.getId());
-                   entityInDB.setEditTime(date);
-                   entityInDB.setDefaultFlag(entity.getDefaultFlag());
-                   entityInDB.setPlaceName(entity.getPlaceName());
-                   if(entity.getDefaultFlag().equals("0000")){
-                	   map.put("userId", "1");
-                	   List<Place> list = placeService.query(map);
-                   	for(Place li:list){
-                   		li.setUserId(1L);
-                   		li.setDefaultFlag("1");
-                   		li.setEditTime(date);
-                   		placeService.update(li);
-                   	}
-                   }
-                   placeService.update(entityInDB);
+                entityInDB.setEditTime(date);
+                entityInDB.setDefaultFlag(entity.getDefaultFlag());
+                entityInDB.setPlaceName(entity.getPlaceName());
+                if (entity.getDefaultFlag().equals("0000")) {
+                    map.put("userId", "1");
+                    List<Place> list = placeService.query(map);
+                    for (Place li : list) {
+                        li.setUserId(1L);
+                        li.setDefaultFlag("1");
+                        li.setEditTime(date);
+                        placeService.update(li);
+                    }
+                }
+                placeService.update(entityInDB);
             }
             result.put(RETURN_CODE, SUCCESS);
-        }
-        catch (RuntimeException ex) {
+        } catch (RuntimeException ex) {
             logger.error(ex.getMessage(), ex);
             result.put(RETURN_CODE, ERROR_UNKNOWN);
             result.put(MSG, ex.getMessage());

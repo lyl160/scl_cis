@@ -35,7 +35,7 @@ public class Place extends DefaultValue {
      */
     private Long schoolId = LONG_EMPTY;
     /**
-     * user_id
+     * user_id 1为默认地址  非1为教师选择地址
      */
     private Long userId = LONG_EMPTY;
     private String schoolname;//学校名称
