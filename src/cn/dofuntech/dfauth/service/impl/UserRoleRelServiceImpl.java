@@ -1,17 +1,16 @@
 package cn.dofuntech.dfauth.service.impl;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import cn.dofuntech.dfauth.bean.UserRoleRelInf;
+import cn.dofuntech.dfauth.repository.mapper.UserRoleRelDao;
+import cn.dofuntech.dfauth.service.UserRoleRelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import cn.dofuntech.dfauth.bean.UserRoleRelInf;
-import cn.dofuntech.dfauth.repository.mapper.UserRoleRelDao;
-import cn.dofuntech.dfauth.service.UserRoleRelService;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -84,7 +83,11 @@ public class UserRoleRelServiceImpl implements UserRoleRelService {
 		return userRoleRelDao.query(map);
 	}
 
-
+	@Override
+	public List<UserRoleRelInf> queryManager(Map<String, Object> map) throws Exception {
+		// TODO Auto-generated method stub
+		return userRoleRelDao.queryManager(map);
+	}
 
 
 }

@@ -23,21 +23,32 @@
 	</delete>
 	
 	<delete id="deleteUsersRels">
-		DELETE FROM AUTH_USER_ROLE_REL_INF
+		DELETE
+		FROM AUTH_USER_ROLE_REL_INF
 		WHERE U_ID IN (${ids})
 	</delete>
-	
+
 	<delete id="deleteRolesRels">
-		DELETE FROM AUTH_USER_ROLE_REL_INF
+		DELETE
+		FROM AUTH_USER_ROLE_REL_INF
 		WHERE R_ID IN (${ids})
 	</delete>
-	
+
 	<select id="query" parameterType="hashmap" resultType="cn.dofuntech.dfauth.bean.UserRoleRelInf">
-	SELECT 
-	<include refid="columns"/>
-    FROM AUTH_USER_ROLE_REL_INF t
-    LEFT JOIN AUTH_USER_INF t1 ON t.U_ID = t1.ID
-    WHERE t1.AGENT_ID = #{agentId}
-    AND t.R_ID = '1' or t.R_ID = '5'
+		SELECT
+		<include refid="columns"/>
+		FROM AUTH_USER_ROLE_REL_INF t
+		LEFT JOIN AUTH_USER_INF t1 ON t.U_ID = t1.ID
+		WHERE t1.AGENT_ID = #{agentId}
+		AND t.R_ID = '1' or t.R_ID = '5'
+	</select>
+
+	<select id="queryManager" parameterType="hashmap" resultType="cn.dofuntech.dfauth.bean.UserRoleRelInf">
+		SELECT
+		<include refid="columns"/>
+		FROM AUTH_USER_ROLE_REL_INF t
+		LEFT JOIN AUTH_USER_INF t1 ON t.U_ID = t1.ID
+		WHERE t1.AGENT_ID = #{agentId}
+		AND t.R_ID = '1' or t.R_ID = '5' or t.R_ID = '8'
 	</select>
 </mapper>

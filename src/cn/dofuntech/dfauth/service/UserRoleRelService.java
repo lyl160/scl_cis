@@ -1,10 +1,9 @@
 package cn.dofuntech.dfauth.service;
 
+import cn.dofuntech.dfauth.bean.UserRoleRelInf;
+
 import java.util.List;
 import java.util.Map;
-
-import cn.dofuntech.dfauth.bean.UserInf;
-import cn.dofuntech.dfauth.bean.UserRoleRelInf;
 
 
 /**
@@ -12,15 +11,18 @@ import cn.dofuntech.dfauth.bean.UserRoleRelInf;
  * @author luokai
  *
  */
-public interface UserRoleRelService extends BaseService<UserRoleRelInf,Exception>{
-       
+public interface UserRoleRelService extends BaseService<UserRoleRelInf, Exception> {
+
 	/**
 	 * 批量删除用户角色关系
+	 *
 	 * @param list 用户角色关系List
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public int removeRelList(List<UserRoleRelInf> list) throws Exception;
-	
-	public List<UserRoleRelInf> query(Map<String,Object> map)throws Exception;
+
+	public List<UserRoleRelInf> query(Map<String, Object> map) throws Exception;
+
+	public List<UserRoleRelInf> queryManager(Map<String, Object> map) throws Exception;
 }
