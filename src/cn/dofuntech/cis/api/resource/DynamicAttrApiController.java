@@ -42,6 +42,7 @@ import cn.dofuntech.cis.api.bean.ReturnMsg;
 import cn.dofuntech.cis.api.resource.base.BaseController;
 import cn.dofuntech.core.entity.DefaultValue;
 import cn.dofuntech.core.util.ResourceUtils;
+import cn.dofuntech.dfauth.bean.UserInf;
 import sun.misc.BASE64Encoder;
 
 @Scope("prototype")
@@ -64,15 +65,16 @@ public class DynamicAttrApiController extends BaseController {
     /**
      * 数据结构如下
      * obj
-     *    |-  dnameList[]
-     *    |      |- did 字典id 1 2 3
-     *    |      |- dname 字典name 教师 学生 管理
-     *    |      |- log 历史提交记录
-     *    |          |- result[] 提交记录属性明细分数
-     *    |              |- attr 明细对应动态属性
-     *    |      |- attrs[]
-     *    |-  dynamicAttrList 动态属性合计
-     *    |-  teachers[] 班级关联的教师
+     * |-  dnameList[]
+     * |      |- did 字典id 1 2 3
+     * |      |- dname 字典name 教师 学生 管理
+     * |      |- log 历史提交记录
+     * |          |- result[] 提交记录属性明细分数
+     * |              |- dynamicAttr 明细对应动态属性
+     * |      |- attrs[]
+     * |-  dynamicAttrList 动态属性全集
+     * |-  teachers[] 班级关联的教师
+     *
      * @param attrParam
      * @return
      */
@@ -83,6 +85,7 @@ public class DynamicAttrApiController extends BaseController {
     @ApiResponses(value = {@ApiResponse(message = "无数据", code = 200)})
     public @ResponseBody
     ReturnMsg getId(DynamicAttr attrParam) {
+        UserInf user = getUser();
         ReturnMsg msg = new ReturnMsg();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -92,24 +95,26 @@ public class DynamicAttrApiController extends BaseController {
         try {
             //根据模板id查询动态属性
             ArrayList<Map> dnameList = new ArrayList<>();//最终返回对象
-            List<DynamicAttr> dynamicAttrList = dynamicAttrService.query(attrQueryParam);
-            HashMap<Long, String> dnameMap = new HashMap<>();
-            HashMap<Long, List> attrMap = new HashMap<>();
-            HashMap<Long, List<InspectionLogs>> logMap = new HashMap<>();
-            List<TeacherClazzRelInf> teacherList = new ArrayList<>();
+            List<DynamicAttr> dynamicAttrList = dynamicAttrService.query(attrQueryParam);//动态属性全集
+            HashMap<Long, String> dnameMap = new HashMap<>();//key-字典id value-字典Name 1教师 2	学生 3管理
+            HashMap<Long, List> attrMap = new HashMap<>();//key-字典id value-attrList
+            HashMap<Long, List<InspectionLogs>> logMap = new HashMap<>();//key-字典id value-日志list
+            List<TeacherClazzRelInf> teacherList = new ArrayList<>();//当前班级的老师list
             for (DynamicAttr attr : dynamicAttrList) {
                 //判断每一个属于什么类型 单选和多选进行解析  属性值和分数
                 if (attr.getType().equals("003") || attr.getType().equals("004")) {
+                    //选项和分数处理
                     attr.setAttrOptions(attr.getAttrOption().split("\\|"));
                     attr.setScores(attr.getScore().split("\\|"));
                 }
-                if (StringUtils.isNotEmpty(attr.getUids())) {//后勤巡查支持多人
+                //后勤巡查支持多人
+                if (StringUtils.isNotEmpty(attr.getUids())) {
                     attr.setUidArr(attr.getUids().split(","));
                 }
-                if (attr.getTname().equals("校务巡查") || attr.getTname().equals("教师执勤")) {
-                }
+                //if (attr.getTname().equals("校务巡查") || attr.getTname().equals("教师执勤")) {
+                //}
                 dnameMap.put(attr.getDid(), attr.getDname());//1教师 2	学生 3管理
-                //将属性值按did分组存放 方便后面使用
+                //将动态属性按did分组存放 方便后面使用
                 if (attrMap.get(attr.getDid()) == null) {
                     ArrayList<DynamicAttr> subList = new ArrayList<>();
                     subList.add(attr);
@@ -121,20 +126,24 @@ public class DynamicAttrApiController extends BaseController {
 
             //查询当个班级当天此二级分类下 已提交数据 并按照did分组
             String clazz = attrParam.getClazz();
-            if (clazz !=null && !clazz.equals(DefaultValue.EMPTY)) {
+            if (clazz != null && !clazz.equals(DefaultValue.EMPTY)) {
                 Map<String, Object> logsParam = new HashMap<String, Object>();
                 logsParam.put("templateId", attrParam.getTemplateId());
                 logsParam.put("schoolId", attrParam.getSchoolId());
                 logsParam.put("clazz", clazz);
-                logsParam.put("category2", attrParam.getSeq());
-                logsParam.put("addTime", sdf.format(new Date()));//2级分类 id
+                logsParam.put("category2", attrParam.getSeq());//2级分类 id
+                logsParam.put("addTime", sdf.format(new Date()));
                 List<InspectionLogs> logs = inspectionLogsService.query(logsParam);
                 for (InspectionLogs log : logs) {
                     Map<String, Object> resultParam = new HashMap<String, Object>();
                     resultParam.put("logsId", log.getId());
                     List<InspectionResult> resultList = inspectionResultService.query(resultParam);
                     for (InspectionResult result : resultList) {
-                        result.setDynamicAttr(dynamicAttrService.get(result.getAttrId()));
+                        DynamicAttr attr = dynamicAttrService.get(result.getAttrId());
+                        if (StringUtils.isNotEmpty(attr.getUids())) {
+                            attr.setUidArr(attr.getUids().split(","));
+                        }
+                        result.setDynamicAttr(attr);
                     }
                     log.setList(resultList);
                     log.setListimgs(getImgsList(log));
@@ -188,6 +197,7 @@ public class DynamicAttrApiController extends BaseController {
 
     /**
      * 取出log中图片list，并转换成base64，用于反显
+     *
      * @param log
      * @return
      */

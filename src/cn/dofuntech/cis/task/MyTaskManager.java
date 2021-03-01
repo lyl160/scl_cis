@@ -471,9 +471,16 @@ public class MyTaskManager {
                         try {
                             //查询是否已经存在该属性的result
                             boolean existResultFlag = false;
+                            boolean needUpdate = false;
+                            InspectionResult resultToUpdate = null;
                             for (InspectionResult result : resultList) {
-                                if (attr.getId().equals(result.getAttrId())) {
-                                    existResultFlag = true;
+                                if (attr.getId().equals(result.getAttrId()) ) {
+                                    if (result.getItemScore().equals("0")) {
+                                        needUpdate = true;
+                                        resultToUpdate = result;
+                                    } else {
+                                        existResultFlag = true;
+                                    }
                                 }
                             }
                             //存在该属性的result，则不生成result
@@ -487,16 +494,23 @@ public class MyTaskManager {
                             String attrOption = optionArray[1];
                             totalScore = totalScore + middleScore;
 
-                            InspectionResult newResult = new InspectionResult();
-                            newResult.setLogsId(clazzExistLogs.getId());
-                            newResult.setAttrId(attr.getId());
-                            newResult.setAttrName(attr.getName());
-                            newResult.setAttrValue(attrOption);
-                            newResult.setAddTime(nowTime);
-                            newResult.setItemCode(attr.getItemCode());
-                            newResult.setItemScore(middleScore + "");
-                            newResult.setSchoolId(attr.getSchoolId());
-                            inspectionResultService.insert(newResult);
+                            if (needUpdate) {
+                                resultToUpdate.setAttrValue(attrOption);
+                                resultToUpdate.setItemScore(middleScore + "");
+                                inspectionResultService.update(resultToUpdate);
+                            } else {
+                                InspectionResult newResult = new InspectionResult();
+                                newResult.setLogsId(clazzExistLogs.getId());
+                                newResult.setAttrId(attr.getId());
+                                newResult.setAttrName(attr.getName());
+                                newResult.setAttrValue(attrOption);
+                                newResult.setAddTime(nowTime);
+                                newResult.setItemCode(attr.getItemCode());
+                                newResult.setItemScore(middleScore + "");
+                                newResult.setSchoolId(attr.getSchoolId());
+                                inspectionResultService.insert(newResult);
+                            }
+
                         } catch (Exception e) {
                             e.printStackTrace();
                             continue;

@@ -1,6 +1,7 @@
 package cn.dofuntech.cis.admin.service.impl;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +63,8 @@ public class InspectionLogsServiceImpl extends DunfengServiceImpl<InspectionLogs
     }
 
     @Override
-    public void deleteTodayLogsByClazzId(InspectionLogs logs) {
+    public List<InspectionResult> deleteTodayLogsByClazzId(InspectionLogs logs) {
+        List<InspectionResult> resultList = new ArrayList<>();
         if (logs != null && !logs.getClazzId().equals(DefaultValue.LONG_EMPTY)) {
             Map logsParam = new HashMap();
             logsParam.put("templateId", logs.getTemplateId());
@@ -72,11 +74,11 @@ public class InspectionLogsServiceImpl extends DunfengServiceImpl<InspectionLogs
             logsParam.put("clazzId", logs.getClazzId());
             logsParam.put("addTime", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
             List<InspectionLogs> logsList = this.query(logsParam);
-            if (logsList!=null && logsList.size() > 0) {
+            if (logsList != null && logsList.size() > 0) {
                 for (InspectionLogs log : logsList) {
                     Map resultparam = new HashMap();
                     resultparam.put("logsId", log.getId());
-                    List<InspectionResult> resultList = inspectionResultService.query(resultparam);
+                    resultList = inspectionResultService.query(resultparam);
                     if (resultList != null && resultList.size() > 0) {
                         inspectionResultService.deleteBatch(resultList);
                     }
@@ -84,6 +86,7 @@ public class InspectionLogsServiceImpl extends DunfengServiceImpl<InspectionLogs
                 }
             }
         }
+        return resultList;
     }
 
     @Override

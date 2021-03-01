@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import cn.dofuntech.cis.admin.repository.domain.InspectionLogs;
+import cn.dofuntech.cis.admin.repository.domain.InspectionResult;
 import cn.dofuntech.core.service.DunfengService;
 /**
  * <p>
@@ -16,14 +17,14 @@ import cn.dofuntech.core.service.DunfengService;
  */
 public interface InspectionLogsService extends DunfengService<InspectionLogs> {
 	
-  List<InspectionLogs> querydate(Map<String,Object> map);
+  List<InspectionLogs> querydate(Map<String, Object> map);
   
-  List<InspectionLogs> queryOnedate(Map<String,Object> map);
+  List<InspectionLogs> queryOnedate(Map<String, Object> map);
   
-  List<InspectionLogs> queryOnedateAll(Map<String,Object> map);
+  List<InspectionLogs> queryOnedateAll(Map<String, Object> map);
 
 
-    void deleteTodayLogsByClazzId(InspectionLogs clazzId);
+    List<InspectionResult> deleteTodayLogsByClazzId(InspectionLogs clazzId);
 
     void deleteTodayLogsByTeamId(InspectionLogs teamId);
 }
