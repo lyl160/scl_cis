@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import cn.dofuntech.cis.admin.controller.PlaceController;
 import cn.dofuntech.cis.admin.repository.domain.ClazzInf;
 import cn.dofuntech.cis.admin.repository.domain.DynamicAttr;
 import cn.dofuntech.cis.admin.repository.domain.InspectionCategory;
@@ -42,7 +43,9 @@ import cn.dofuntech.cis.admin.service.ScheduleService;
 import cn.dofuntech.cis.admin.service.WorkDayService;
 import cn.dofuntech.dfauth.bean.Dict;
 import cn.dofuntech.dfauth.bean.UserInf;
+import cn.dofuntech.dfauth.bean.UserRoleRelInf;
 import cn.dofuntech.dfauth.service.DictService;
+import cn.dofuntech.dfauth.service.UserRoleRelService;
 import cn.dofuntech.dfauth.service.UserService;
 
 
@@ -77,12 +80,15 @@ public class MyTaskManager {
     private WorkDayService workDayService;
     @Autowired
     private InspectionTemplateService inspectionTemplateService;
+    @Autowired
+    private UserRoleRelService userRoleRelService;
 
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     SimpleDateFormat sdfHHmm = new SimpleDateFormat("HH:mm");
 
     private static Long DICT_ITEMCODE_TEACHER = 10000008L;
     private static Long DICT_ITEMCODE_STUDENT = 10000009L;
+
 
     /**
      * 判断某校今天是不是休息日
@@ -108,7 +114,6 @@ public class MyTaskManager {
         }
         return false;
     }
-
 
     /**
      * 每天早上6点钟执行 自动推送值班消息
@@ -525,7 +530,6 @@ public class MyTaskManager {
 
     }
 
-
     /**
      * 每天晚上18点30分，自动生成当天校务巡查未巡查各班级分数
      */
@@ -682,7 +686,7 @@ public class MyTaskManager {
 
     /**
      * 每天6点到18点 偏移2分钟 每5分钟执行一次,查看是否巡查超时并通告(教师执勤)
-     * 任务开始后，2分钟未打卡的，系统自动通告（通告消息集中一条发出） 通告给当日值班校务巡查的老师
+     * 任务开始后，2分钟未打卡的，系统自动通告（通告消息集中一条发出） 通告给roleId 1（超管）,5（校长）,8（校务行政）的老师
      */
     @Scheduled(cron = "0 2/5 6-18 * * ? ")
     public void jiaoshiNoticeMx() throws Exception {
@@ -695,7 +699,7 @@ public class MyTaskManager {
         Map<String, Object> categoryParam = new HashMap<String, Object>();
         scheduleParam.put("dutyDate", sdf.format(System.currentTimeMillis()));
         scheduleParam.put("templateName", "教师执勤");
-        //得到今天所有要推送的消息
+        //根据排班表得到今天所有要推送的消息
         List<Schedule> scheduleList = scheduleService.query(scheduleParam);
         if (scheduleList != null && scheduleList.size() > 0) {
             for (Schedule schedule : scheduleList) {
@@ -713,7 +717,7 @@ public class MyTaskManager {
                 for (InspectionCategory category : categoryAllList) {
                     StringBuffer timeContent = new StringBuffer();
                     StringBuffer teacherName = new StringBuffer();
-                    //找出2分钟之前符合时间范围的项目
+                    //找出2分钟之前符合时间范围的巡检项目
                     if (inspectionCategoryService.inTime(category, before2minuteDate)) {
                         //将自定义时间重新设置项目开始和结束时间，如果无自定义时间则无操作
                         inspectionCategoryService.resetStartAndEndTime(category, new Date());
@@ -752,7 +756,7 @@ public class MyTaskManager {
                                 Map placeParam = new HashMap();
                                 placeParam.put("userId", userInfo.getId());
                                 Place place = placeService.get(placeParam);
-                                //加入到通告明细
+                                //加入到通告明细表，以备后台查看导出
                                 NoticeMx noticeMx = new NoticeMx();
                                 noticeMx.setUserName(userInfo.getUserName());
                                 noticeMx.setDutyDate(schedule.getDutyDate());
@@ -777,29 +781,27 @@ public class MyTaskManager {
                                     .append(timeContent.toString())
                                     .append(teacherName.toString().substring(0, teacherName.length() - 1))
                                     .append("未按照规定时间到岗，予以通告");
-                            //将本分类的未到岗教师名单 通告给今天进行校务巡查的排班人员
-                            Map<String, Object> XWscheduleParam = new HashMap();
-                            XWscheduleParam.put("dutyDate", sdf.format(nowDate));
-                            XWscheduleParam.put("templateName", "校务巡查");
-                            XWscheduleParam.put("schoolId", schedule.getSchoolId());
-                            List<Schedule> XWscheduleList = scheduleService.query(XWscheduleParam);
-                            for (Schedule XWschedule : XWscheduleList) {
-                                List<UserInf> XWuserInfoList = scheduleService.getTeachersBySchedule(XWschedule);
-                                for (UserInf XWUserinfo : XWuserInfoList) {
-                                    Notice notice = new Notice();
-                                    notice.setTitle("通告");
-                                    notice.setContent(noticeContent.toString());
-                                    notice.setType("1");//值班提醒
-                                    notice.setUserId(XWUserinfo.getId() + 0L);
-                                    notice.setIsread("0");//未读
-                                    notice.setAddtime(new Timestamp(System.currentTimeMillis()));
-                                    notice.setEdittime(new Timestamp(System.currentTimeMillis()));
-                                    notice.setDutyDate(schedule.getDutyDate());
-                                    notice.setSchoolId(schedule.getSchoolId());
-                                    noticeService.insert(notice);
-                                    logger.debug("给用户：{}，发送通告消息{}", XWUserinfo.getUserName(), noticeContent.toString());
-                                }
+                            //将本分类的未到岗教师名单 通告给该校roleId 1（超管）,5（校长）,8（校务行政）
+                            Map<String, Object> userRoleParam = new HashMap<>();
+                            userRoleParam.put("agentId", schedule.getSchoolId());//学校id
+                            //查询1（超管）,5（校长）,8（校务行政）的用户id
+                            List<UserRoleRelInf> UserRoleList = userRoleRelService.queryManager(userRoleParam);
+                            for (UserRoleRelInf userRoleRelInf : UserRoleList) {
+                                Notice notice = new Notice();
+                                notice.setTitle("通告");
+                                notice.setContent(noticeContent.toString());
+                                notice.setType("1");//值班提醒
+                                notice.setUserId(userRoleRelInf.getUserId() + 0L);
+                                notice.setIsread("0");//未读
+                                notice.setAddtime(new Timestamp(System.currentTimeMillis()));
+                                notice.setEdittime(new Timestamp(System.currentTimeMillis()));
+                                notice.setDutyDate(schedule.getDutyDate());
+                                notice.setSchoolId(schedule.getSchoolId());
+                                noticeService.insert(notice);
+                                logger.debug("给用户：{}，发送通告消息{}", userRoleRelInf.getUserId(), noticeContent.toString());
+
                             }
+
                         }
                     }
                 }
@@ -813,7 +815,7 @@ public class MyTaskManager {
 
     /**
      * 每天6点到18点 偏移2分钟5秒  每5分钟执行一次,查看是否巡查超时并通告(护校队巡查)
-     * 通告给指定用户
+     * 通告该校roleId 1（超管）,5（校长）,8（校务行政）
      */
     @Scheduled(cron = "5 2/5 6-18 * * ? ")
     public void huxiaoduiNoticeMx() throws Exception {
@@ -836,20 +838,6 @@ public class MyTaskManager {
                 }
                 //要值班的用户
                 List<UserInf> userList = scheduleService.getTeachersBySchedule(schedule);
-
-                //通告给该用户
-                Map dictParam = new HashMap();
-                if (schedule.getSchoolId() == 1) {
-                    dictParam.put("dictName", "国际人员");
-                } else if (schedule.getSchoolId() == 2) {
-                    dictParam.put("dictName", "阳光人员");
-                } else if (schedule.getSchoolId() == 3) {
-                    dictParam.put("dictName", "CBD人员");
-                }
-                Dict dict = dictService.get(dictParam);
-                UserInf noticeToUser = new UserInf();
-                noticeToUser.setUserName(dict.getDictValue());
-                noticeToUser = userService.getEntity(noticeToUser);
 
                 categoryParam.put("templateName", "护校队巡查");
                 categoryParam.put("schoolId", schedule.getSchoolId());
@@ -922,19 +910,26 @@ public class MyTaskManager {
                                     .append(timeContent.toString())
                                     .append(teacherName.toString().substring(0, teacherName.length() - 1))
                                     .append("未按照规定时间到岗，予以通告");
-                            //将本分类的未到岗教师名单 通告给字典表指定用户
-                            Notice notice = new Notice();
-                            notice.setTitle("通告");
-                            notice.setContent(noticeContent.toString());
-                            notice.setType("1");//值班提醒
-                            notice.setUserId(noticeToUser.getId() + 0L);
-                            notice.setIsread("0");//未读
-                            notice.setAddtime(new Timestamp(System.currentTimeMillis()));
-                            notice.setEdittime(new Timestamp(System.currentTimeMillis()));
-                            notice.setDutyDate(schedule.getDutyDate());
-                            notice.setSchoolId(schedule.getSchoolId());
-                            noticeService.insert(notice);
-                            logger.debug("给用户：{}，发送通告消息{}", noticeToUser.getUserName(), noticeContent.toString());
+                            //将本分类的未到岗教师名单 通告给该校roleId 1（超管）,5（校长）,8（校务行政）
+                            Map<String, Object> userRoleParam = new HashMap<>();
+                            userRoleParam.put("agentId", schedule.getSchoolId());//学校id
+                            //查询1（超管）,5（校长）,8（校务行政）的用户id
+                            List<UserRoleRelInf> UserRoleList = userRoleRelService.queryManager(userRoleParam);
+                            for (UserRoleRelInf userRoleRelInf : UserRoleList) {
+                                Notice notice = new Notice();
+                                notice.setTitle("通告");
+                                notice.setContent(noticeContent.toString());
+                                notice.setType("1");//值班提醒
+                                notice.setUserId(userRoleRelInf.getUserId() + 0L);
+                                notice.setIsread("0");//未读
+                                notice.setAddtime(new Timestamp(System.currentTimeMillis()));
+                                notice.setEdittime(new Timestamp(System.currentTimeMillis()));
+                                notice.setDutyDate(schedule.getDutyDate());
+                                notice.setSchoolId(schedule.getSchoolId());
+                                noticeService.insert(notice);
+                                logger.debug("给用户：{}，发送通告消息{}", userRoleRelInf.getUserId(), noticeContent.toString());
+                            }
+
                         }
                     }
                 }
