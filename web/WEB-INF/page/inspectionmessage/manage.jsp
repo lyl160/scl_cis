@@ -6,16 +6,17 @@
         <div style="display: block;" class="widget-body ">
             <div class="widget-main">
                 <div class="rowt">
-                    <div  class="col-sm-12">
+                    <div class="col-sm-12">
                         <div>
                             <label class="label_search">消息类型:</label>
                             <input id="title2" type="text" name="title2" placeholder="请输入消息类型">
                             <label class="label_search">内容类型:</label>
-                            <select name="type"  style="width: 130px;vertical-align:middle;">
-                                <option value=''  selected >请选择</option>
-                                <option value='1'>巡查反馈</option>
+                            <select name="type" style="width: 130px;vertical-align:middle;">
+                                <option value='' selected>请选择</option>
+                                <option value='1'>校务巡查反馈</option>
                                 <option value='2'>一周综述</option>
                                 <option value='3'>校园大事记</option>
+                                <option value='6'>后勤巡查反馈</option>
                             </select>
                             <label class="label_search" style="width:44px"></label>
                         </div>
@@ -31,7 +32,7 @@
                                    AUTOCOMPLETE="off">&nbsp--
                             <input class="date-pic"  id="jsTime" type="text" name="jsTime" placeholder="请选择结束时间"
                                    AUTOCOMPLETE="off">
-                            <input id="title" type="text" name="title" value="校务巡查" style="display:none;">
+                            <%--                            <input id="title" type="text" name="title" value="校务巡查" style="display:none;">--%>
                             <button class="btn btn-small btn_search" type="submit" title="搜索">
                                 搜索
                             </button>
@@ -54,6 +55,7 @@
         <table id="grid-table"></table>
         <div id="grid-pager"></div>
         <div style="margin-top: 10px">
+            <span><a class="btn btn-small btn-add" onclick="studentBillExport();">导出数据</a></span>
             <span id="paging_bar" style="float: right"> </span>
         </div>
     </div>
@@ -88,29 +90,31 @@
                 total: "totalPage",
                 records: "total"
             },
-            postData:{title:"校务巡查",ksTime:$("#ksTime").val(),jsTime:$("#jsTime").val()},
+            postData: {ksTime: $("#ksTime").val(), jsTime: $("#jsTime").val()},
             colNames: ['id', '内容类型', '消息类型', '内容描述', '提交人', '添加时间', '操作'],
             colModel: [
                 {name: 'id', index: 'id', width: '20%'},
                 {
                     name: 'type', index: 'type', width: '20%', formatter: function (cellvalue, options, rowObject) {
                         if (cellvalue == 1) {
-                            return '巡查反馈';
+                            return '校务巡查反馈';
                         } else if (cellvalue == 2) {
                             return '一周综述';
                         } else if (cellvalue == 3) {
                             return '校园大事记';
-                        }  else {
+                        } else if (cellvalue == 6) {
+                            return '后勤巡查反馈';
+                        } else {
                             return '';
                         }
                     }
                 },
-                {name: '', index: '', width: '20%',
+                {
+                    name: '', index: '', width: '20%',
                     formatter: function (cellvalue, options, rowObject) {
                         var title = rowObject.title;
                         var titleArray = title.split("-");
-
-                        return titleArray[1].replace("校务巡查",'');
+                        return titleArray[1].replace("后勤巡查反馈", '').replace("校务巡查反馈", '').replace("校务巡查", '');
                     }
                 },
                 {name: 'remark', index: 'remark', width: '20%'},
@@ -153,6 +157,17 @@
             $('.ui-jqdialog').remove();
         });
     });
+
+    //导出
+    function studentBillExport() {
+        msg.confirm({
+            title: '确认', position: 'center', msg: '您确定要导出综述消息数据吗？', call: function (ok) {
+                if (ok) {
+                    window.location.href = "inspectionMessage/msgExport4zsxx?tpl=综述消息&" + $("form").serialize();
+                }
+            }
+        });
+    }
 
 
     //详情页面

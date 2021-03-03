@@ -69,10 +69,10 @@
         SELECT
         <include refid="columns"/>
         FROM t_inspection_message t
-        WHERE DATE_FORMAT(add_time,'%Y-%m-%d') = #{addTime} and t.school_id=#{schoolId}
-        <if test="receiver != null and receiver != ''">
-            and t.receiver = #{receiver}
-        </if>
+        WHERE
+        ((DATE_FORMAT(add_time,'%Y-%m-%d') = #{addTime} and type in(4,5))
+        or (type in(1,2,3,6,7,8)))
+        and t.school_id=#{schoolId}
         order by t.add_time desc
 
     </select>
@@ -94,6 +94,7 @@
         LEFT JOIN t_school_inf s ON s.id = t.school_id
         <where>
             <include refid="condition"/>
+            and type not in (4,5)
             <if test="startHours != null and startHours != ''">
                 and STR_TO_DATE(t.add_time,'%Y-%m-%d %H:%i:%s') <![CDATA[ >= ]]> STR_TO_DATE(#{startHours},'%Y-%m-%d
                 %H:%i:%s')

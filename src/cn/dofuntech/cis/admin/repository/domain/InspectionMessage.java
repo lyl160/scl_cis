@@ -1,21 +1,22 @@
 package cn.dofuntech.cis.admin.repository.domain;
-import java.sql.Timestamp;
-import java.util.List;
 
 import cn.dofuntech.core.entity.DefaultValue;
+
+import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * InspectionMessage
  */
-public class InspectionMessage extends DefaultValue{
-	
-	 /**
+public class InspectionMessage extends DefaultValue {
+
+	/**
      * 
      */
     private static final long serialVersionUID = 1L;
-    /**
-     * type 综述类型：1一日综述、2一周综述、3校园大事记、4教师执勤、5护校队巡查
-     */
+	/**
+	 * type 综述类型：1校务巡查反馈、2一周综述、3校园大事记、4教师执勤、5护校队巡查、6后勤巡查反馈
+	 */
     private Long type = LONG_EMPTY;
 	/**
 	 * remark

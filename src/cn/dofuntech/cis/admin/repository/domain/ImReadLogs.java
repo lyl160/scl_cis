@@ -1,17 +1,24 @@
 package cn.dofuntech.cis.admin.repository.domain;
-import java.sql.Timestamp;
+
 import cn.dofuntech.core.entity.DefaultValue;
+
+import java.sql.Timestamp;
 
 /**
  * ImReadLogs
  */
-public class ImReadLogs extends DefaultValue{
-	
-	 /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
-	
+public class ImReadLogs extends DefaultValue {
+
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * type 综述类型：1校务巡查反馈、2一周综述、3校园大事记、4教师执勤、5护校队巡查、6后勤巡查反馈
+	 */
+	private Long type = LONG_EMPTY;
+
 	/**
 	 * message_id
 	 */
@@ -65,23 +72,32 @@ public class ImReadLogs extends DefaultValue{
 	
 	public ImReadLogs(Long id, Long messageId, Long userId, String userName, String isread, Timestamp readtime, Timestamp addtime, Timestamp edittime) {
 		super();
-		this.id = id; 
-		this.messageId = messageId; 
-		this.userId = userId; 
-		this.userName = userName; 
-		this.isread = isread; 
-		this.readtime = readtime; 
-		this.addtime = addtime; 
-		this.edittime = edittime; 
+		this.id = id;
+		this.messageId = messageId;
+		this.userId = userId;
+		this.userName = userName;
+		this.isread = isread;
+		this.readtime = readtime;
+		this.addtime = addtime;
+		this.edittime = edittime;
 	}
-	
+
+	public Long getType() {
+		return type;
+	}
+
+	public void setType(Long type) {
+		this.type = type;
+	}
+
 	public Long getMessageId() {
 		return messageId;
 	}
 
 	public void setMessageId(Long messageId) {
 		this.messageId = messageId;
-	} 
+	}
+
 	public Long getUserId() {
 		return userId;
 	}

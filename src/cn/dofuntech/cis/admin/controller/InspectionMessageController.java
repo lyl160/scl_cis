@@ -1,24 +1,5 @@
 package cn.dofuntech.cis.admin.controller;
 
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.alibaba.fastjson.JSON;
-
 import cn.dofuntech.cis.admin.controller.base.ExportExcelUtil;
 import cn.dofuntech.cis.admin.repository.domain.InspectionMessage;
 import cn.dofuntech.cis.admin.repository.domain.NoticeMx;
@@ -28,6 +9,22 @@ import cn.dofuntech.cis.admin.service.SchoolInfService;
 import cn.dofuntech.core.page.Paginator;
 import cn.dofuntech.core.web.AdminController;
 import cn.dofuntech.dfauth.util.UAI;
+import com.alibaba.fastjson.JSON;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 控制器
@@ -158,6 +155,73 @@ public class InspectionMessageController extends AdminController<InspectionMessa
             logger.info("教师巡查明细导出成功=====");
         } catch (Exception ex) {
             logger.error("教师巡查明细数据导出异常：{}", ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * 护校队巡查明细导出
+     *
+     * @return
+     */
+    @RequestMapping(value = "/msgExport4zsxx")
+    public void msgExport4zsxx(@RequestParam Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) {
+        logger.info("综述消息导出======start=======参数:{}", JSON.toJSONString(params));
+        try {
+            UAI uai = ((UAI) getRequest().getSession().getAttribute("UID"));
+            //大校长为9可以查看所有的模板
+            if (!uai.getRoleId().equals("9")) {
+                params.put("schoolId", uai.getAgentId());
+            }
+            List<InspectionMessage> msgMappings = inspectionMessageService.query(params);
+            //构造标题
+            List<String> headers = new ArrayList<String>();
+            headers.add("序号");
+            headers.add("内容类型");
+            headers.add("消息类型");
+            headers.add("内容描述");
+            headers.add("提交人");
+            headers.add("添加时间");
+            //构造行数据
+            List<List<String>> xdataMain = new ArrayList<List<String>>();
+            int index = 1;
+            for (InspectionMessage bm : msgMappings) {
+                List<String> xdata_temp = new ArrayList<String>();
+                xdata_temp.add(String.valueOf(index));
+                Long type = bm.getType();
+                String typeDesc = "";
+                if (type == 1) {
+                    typeDesc = "校务巡查反馈";
+                } else if (type == 2) {
+                    typeDesc = "一周综述";
+                } else if (type == 3) {
+                    typeDesc = "校园大事记";
+                } else if (type == 6) {
+                    typeDesc = "后勤巡查反馈";
+                }
+                String[] titleArray = bm.getTitle().split("-");
+                String title = null;
+                if (titleArray.length >= 2) {
+                    title = titleArray[1].replace("后勤巡查反馈", "").replace("校务巡查反馈", "").replace("校务巡查", "");
+                }
+                xdata_temp.add(typeDesc);
+                xdata_temp.add(title);
+                xdata_temp.add(bm.getRemark());
+                xdata_temp.add(bm.getUserName());
+                xdata_temp.add(bm.getFmtDate());
+                index++;
+                xdataMain.add(xdata_temp);
+            }
+            //订单主表信息
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            OutputStream out = response.getOutputStream();
+            String title = "综述消息";
+            ExportExcelUtil<InspectionMessage> excelUtil = new ExportExcelUtil<InspectionMessage>();
+            String pattern = "yyyy-MM-dd HH:mm:dd";
+            response.setHeader("Content-Disposition", "attachment;filename=" + new String((title + ".xls").getBytes(), "iso-8859-1"));
+            excelUtil.exportoExcelSorce(title, headers, null, xdataMain, out, pattern);
+            logger.info("综述消息导出成功=====");
+        } catch (Exception ex) {
+            logger.error("综述消息数据导出异常：{}", ex.getMessage(), ex);
         }
     }
 

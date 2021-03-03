@@ -39,12 +39,11 @@
 	
 	<!-- 新增 -->
 	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
-		INSERT INTO t_im_read_logs (
-		 message_id, user_id, user_name, isread, readtime, addtime, edittime,
-		school_id) VALUES (
-		#{messageId}, #{userId}, #{userName}, #{isread}, #{readtime}, #{addtime}, #{edittime},#{schoolId}
-		)
-	</insert>
+        INSERT INTO t_im_read_logs (message_id, user_id, user_name, isread, readtime, addtime, edittime, type,
+                                    school_id)
+        VALUES (#{messageId}, #{userId}, #{userName}, #{isread}, #{readtime}, #{addtime}, #{edittime}, #{type},
+                #{schoolId})
+    </insert>
 	
 	<!-- 查询所有-->
 	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
@@ -59,9 +58,11 @@
 	<select id="queryAll"  parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">
 		SELECT
 		<include refid="columns"/>
-		FROM t_im_read_logs t
-		WhERE user_id = #{userId} and DATE_FORMAT(addtime,'%Y-%m-%d') = #{addtime}  order by addtime desc
-	</select>
+        FROM t_im_read_logs t
+        WhERE user_id = #{userId} and
+        ((type in (4,5) and DATE_FORMAT(addtime,'%Y-%m-%d') = #{addtime}) or type in (1,2,3,6,7,8)) order by addtime
+        desc
+    </select>
 	
 	<!-- 条件查询-->
 	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.ImReadLogs">

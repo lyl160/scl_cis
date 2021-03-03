@@ -1,39 +1,8 @@
 package cn.dofuntech.cis.api.resource;
 
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
-
 import cn.dofuntech.cis.admin.repository.domain.ImReadLogs;
 import cn.dofuntech.cis.admin.repository.domain.InspectionMessage;
-import cn.dofuntech.cis.admin.service.ClazzInfService;
-import cn.dofuntech.cis.admin.service.ImReadLogsService;
-import cn.dofuntech.cis.admin.service.InspectionLogsService;
-import cn.dofuntech.cis.admin.service.InspectionMessageService;
-import cn.dofuntech.cis.admin.service.InspectionResultService;
+import cn.dofuntech.cis.admin.service.*;
 import cn.dofuntech.cis.api.bean.ReturnMsg;
 import cn.dofuntech.cis.api.resource.base.BaseController;
 import cn.dofuntech.cis.api.util.ImageUpload;
@@ -45,6 +14,17 @@ import cn.dofuntech.dfauth.service.DictService;
 import cn.dofuntech.dfauth.service.RoleService;
 import cn.dofuntech.dfauth.service.UserRoleRelService;
 import cn.dofuntech.dfauth.service.UserService;
+import com.wordnik.swagger.annotations.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Scope("prototype")
 @Path("inspectionMessage")
@@ -166,7 +146,7 @@ public class InspectionMessageApiController extends BaseController {
             entity.setUserName(getUser().getUserName());
             entity.setImgs(imgs.toString());
             entity.setStatus("0");
-            if (entity.getTitle().contains("教师执勤") || entity.getTitle().contains("校务巡查")|| entity.getTitle().contains("护校队巡查")) {
+            if (entity.getTitle().contains("教师执勤") || entity.getTitle().contains("校务巡查") || entity.getTitle().contains("护校队巡查")) {
                 entity.setReceiver(1L);
             } else {
                 entity.setReceiver(Long.parseLong(user.getId().toString()));
@@ -174,9 +154,15 @@ public class InspectionMessageApiController extends BaseController {
             entity.setUserId(userId);
             entity.setAddTime(new Timestamp(System.currentTimeMillis()));
             inspectionMessageService.insert(entity);
-            if (entity.getTitle().contains("校务巡查")) {
-                //一日综述、一周综述、校园大事记 自动发布
+            if (entity.getTitle().contains("校务巡查")
+                    || entity.getTitle().contains("校务巡查反馈")
+                    || entity.getTitle().contains("后勤巡查反馈")) {
+                //一日综述、一周综述、校园大事记、 校务巡查反馈、后勤巡查反馈 自动发布
                 pushMessage(entity.getId());
+            } else if (entity.getTitle().contains("教师执勤")
+                    || entity.getTitle().contains("护校队巡查")) {
+                //教师执勤、护校队执勤 生成一条已读记录
+                pushMessageSelf(entity.getId());
             }
             msg.setSuccess("提交成功");
             //im.setUserName(userName);
@@ -184,6 +170,38 @@ public class InspectionMessageApiController extends BaseController {
             msg.setFail("阅读日志，异常:" + e.getMessage());
             log.error("阅读日志，{}", e.getMessage(), e);
         }
+        return msg;
+    }
+
+    public ReturnMsg pushMessageSelf(Long message_id) {
+        ReturnMsg msg = new ReturnMsg();
+        Long userId = (long) getUser().getId();
+        InspectionMessage inspectionMessage = inspectionMessageService.get(message_id);
+        try {
+            if (userId == null || userId <= 0) {
+                msg.setFail("用户id不能为空");
+                return msg;
+            }
+            ImReadLogs entity = new ImReadLogs();
+            entity.setMessageId(message_id);
+            entity.setIsread("0");
+            Timestamp time = new Timestamp(System.currentTimeMillis());
+            entity.setAddtime(inspectionMessage.getAddTime());
+            entity.setEdittime(inspectionMessage.getAddTime());
+            Map<String, Object> map = new HashMap<>();
+            map.put("agentId", getUser().getAgentId());//学校id
+            entity.setType(inspectionMessage.getType());
+            entity.setUserId((long) getUser().getId());
+            entity.setUserName(getUser().getUserName());
+            imReadLogsService.insert(entity);
+            //修改推送状态
+            inspectionMessage.setStatus("1");
+            inspectionMessageService.update(inspectionMessage);
+        } catch (Exception e) {
+            msg.setFail("推送自己打卡消息，异常:" + e.getMessage());
+            log.error("推送自己打卡消息，{}", e.getMessage(), e);
+        }
+        pushMessageManager(message_id);
         return msg;
     }
 
@@ -277,29 +295,21 @@ public class InspectionMessageApiController extends BaseController {
             Timestamp time = new Timestamp(System.currentTimeMillis());
             entity.setAddtime(inspectionMessage.getAddTime());
             entity.setEdittime(inspectionMessage.getAddTime());
+            entity.setType(inspectionMessage.getType());
             Map<String, Object> map = new HashMap<>();
             map.put("agentId", getUser().getAgentId());//学校id
             //教师角色为7
             List<UserInf> list = userService.queryAll(map);
-            List<UserRoleRelInf> role = userRoleRelService.query(map);
-            String rid = "";
-            for (UserRoleRelInf re : role) {
-                rid += re.getUserId() + ",";
-            }
+
             for (UserInf u : list) {
-                if (!(rid.contains(u.getId() + ""))) {
-                    logger.debug("推送综述,开始...id是" + u.getId());
-
-                    entity.setUserId((long) u.getId());
-                    entity.setUserName(u.getUserName());
-                    // 老师entity.setId(id);
-                    imReadLogsService.insert(entity);
-                }
-
+                logger.debug("推送综述,开始...id是" + u.getId());
+                entity.setUserId((long) u.getId());
+                entity.setUserName(u.getUserName());
+                // 老师entity.setId(id);
+                imReadLogsService.insert(entity);
             }
             log.info("所有老师推送完毕...");
             msg.setSuccess("所有老师推送综述完毕");
-
 
             //修改推送状态
             inspectionMessage.setStatus("1");
@@ -308,6 +318,52 @@ public class InspectionMessageApiController extends BaseController {
         } catch (Exception e) {
             msg.setFail("推送综述，异常:" + e.getMessage());
             log.error("推送综述，{}", e.getMessage(), e);
+        }
+        return msg;
+    }
+
+    public ReturnMsg pushMessageManager(@ApiParam(name = "message_id", required = true, value = "一日综述ID") @PathParam("message_id") Long message_id) {
+        ReturnMsg msg = new ReturnMsg();
+        Long userId = (long) getUser().getId();
+        InspectionMessage inspectionMessage = inspectionMessageService.get(message_id);
+        try {
+            if (userId == null || userId <= 0) {
+                msg.setFail("用户id不能为空");
+                return msg;
+            }
+            log.info("推送管理人员,开始...");
+
+            ImReadLogs entity = new ImReadLogs();
+            entity.setMessageId(message_id);
+            entity.setIsread("0");
+            Timestamp time = new Timestamp(System.currentTimeMillis());
+            entity.setAddtime(inspectionMessage.getAddTime());
+            entity.setEdittime(inspectionMessage.getAddTime());
+            entity.setType(inspectionMessage.getType());
+            Map<String, Object> map = new HashMap<>();
+            map.put("agentId", getUser().getAgentId());//学校id
+            //管理员、校务、校长
+            List<UserRoleRelInf> list = userRoleRelService.queryManager(map);
+            for (UserRoleRelInf u : list) {
+                logger.debug("推送管理人员,开始...id是" + u.getUserId());
+                entity.setUserId((long) u.getUserId());
+                UserInf userInfParam = new UserInf();
+                userInfParam.setId(u.getUserId());
+                UserInf userInf = userService.getEntity(userInfParam);
+                entity.setUserName(userInf.getUserName());
+                // 老师entity.setId(id);
+                imReadLogsService.insert(entity);
+            }
+            log.info("推送管理人员推送完毕...");
+            msg.setSuccess("推送管理人员推送综述完毕");
+
+            //修改推送状态
+            inspectionMessage.setStatus("1");
+            inspectionMessageService.update(inspectionMessage);
+
+        } catch (Exception e) {
+            msg.setFail("推送管理人员，异常:" + e.getMessage());
+            log.error("推送管理人员，{}", e.getMessage(), e);
         }
         return msg;
     }
@@ -364,36 +420,21 @@ public class InspectionMessageApiController extends BaseController {
         String schoolId = getUser().getAgentId();
         try {
             Map<String, Object> messageParam = new HashMap<String, Object>();
-            Map<String, Object> dictParam = new HashMap<String, Object>();
-            if (schoolId.equals("1")) {
-                dictParam.put("dictName", "国际人员");
-            } else if (schoolId.equals("2")) {
-                dictParam.put("dictName", "阳光人员");
-            } else if (schoolId.equals("3")) {
-                dictParam.put("dictName", "CBD人员");
-            }
-            //查询
-            Dict dict = dictService.get(dictParam);
-            UserInf user = new UserInf();
-            user.setUserName(dict.getDictValue());
-            user = userService.getEntity(user);
             Timestamp date = new Timestamp(System.currentTimeMillis());
             SimpleDateFormat s1 = new SimpleDateFormat("yyyy-MM-dd");
-
             messageParam.put("addTime", s1.format(date));
             messageParam.put("schoolId", getUser().getAgentId());
-            if (getUser().getId().equals(user.getId())) {
-                messageParam.put("receiver", getUser().getId());
-            } else {
-                messageParam.put("receiver", "1");
-            }
             //查询今日所有
             List<InspectionMessage> alllogs = inspectionMessageService.queryAll(messageParam);
             String title;
             for (InspectionMessage message : alllogs) {
                 title = message.getTitle();
-                if (title.contains("护校队巡查")) {
+                if (title.contains("后勤巡查反馈")) {
+                    message.setTitleDiy(title);
+                } else if (title.contains("护校队巡查")) {
                     message.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
+                } else if (title.contains("校务巡查反馈") || title.contains("后勤巡查反馈")) {
+                    message.setTitleDiy(title.substring(title.length() - 6) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 6)));
                 } else {
                     message.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
                 }
@@ -432,8 +473,12 @@ public class InspectionMessageApiController extends BaseController {
             for (ImReadLogs readLog : alllogs) {
                 InspectionMessage message = inspectionMessageService.get(readLog.getMessageId());
                 String title = message.getTitle();
-                if (title.contains("护校队巡查")) {
+                if (title.contains("后勤巡查反馈")) {
+                    message.setTitleDiy(title);
+                } else if (title.contains("护校队巡查")) {
                     message.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
+                } else if (title.contains("校务巡查反馈") || title.contains("后勤巡查反馈")) {
+                    message.setTitleDiy(title.substring(title.length() - 6) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 6)));
                 } else {
                     message.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
                 }
