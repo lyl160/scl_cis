@@ -85,6 +85,7 @@ public class InspectionMessageController extends AdminController<InspectionMessa
         if (!uai.getRoleId().equals("9")) {
             params.put("schoolId", uai.getAgentId());
         }
+        params.put("notin45", "true");
         List<InspectionMessage> list = inspectionMessageService.query(params, paginator);
         long totalCount = paginator.getTotalCount();
         result.put("total", totalCount);
@@ -95,13 +96,13 @@ public class InspectionMessageController extends AdminController<InspectionMessa
     }
 
     /**
-     * 教师巡查明细导出
+     * 校内执勤明细导出
      *
      * @return
      */
     @RequestMapping(value = "/msgExport4Js")
     public void msgExport4Js(@RequestParam Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) {
-        logger.info("教师巡查明细导出======start=======参数:{}", JSON.toJSONString(params));
+        logger.info("校内执勤明细导出======start=======参数:{}", JSON.toJSONString(params));
         try {
             UAI uai = ((UAI) getRequest().getSession().getAttribute("UID"));
             //大校长为9可以查看所有的模板
@@ -147,14 +148,14 @@ public class InspectionMessageController extends AdminController<InspectionMessa
             //订单主表信息
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             OutputStream out = response.getOutputStream();
-            String title = "教师巡查明细";
+            String title = "校内执勤明细";
             ExportExcelUtil<InspectionMessage> excelUtil = new ExportExcelUtil<InspectionMessage>();
             String pattern = "yyyy-MM-dd HH:mm:dd";
             response.setHeader("Content-Disposition", "attachment;filename=" + new String((title + ".xls").getBytes(), "iso-8859-1"));
             excelUtil.exportoExcelSorce(title, headers, null, xdataMain, out, pattern);
-            logger.info("教师巡查明细导出成功=====");
+            logger.info("校内执勤明细导出成功=====");
         } catch (Exception ex) {
-            logger.error("教师巡查明细数据导出异常：{}", ex.getMessage(), ex);
+            logger.error("校内执勤明细数据导出异常：{}", ex.getMessage(), ex);
         }
     }
 

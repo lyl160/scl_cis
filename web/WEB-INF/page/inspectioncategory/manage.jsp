@@ -129,7 +129,7 @@
                 msg.alert("警告", "请选择1级分类！", "warn");
                 return;
             }
-            if (rowData.value1 != "教师执勤" && rowData.value1 != "护校队巡查") {
+            if (rowData.value1 != "校内执勤" && rowData.value1 != "护校队巡查") {
                 openDialog({
                     dialogId: 'dlg-add3',
                     title: '新增2级类别',
@@ -171,7 +171,7 @@
             msg.alert("警告", "不能同时选择多项数据！", "warn");
             return;
         }
-        if (rowData.ilevel == "2" && (rowData.value1 == "教师执勤" || rowData.value1 == "护校队巡查")) {
+        if (rowData.ilevel == "2" && (rowData.value1 == "校内执勤" || rowData.value1 == "护校队巡查")) {
             openDialog({
                 dialogId: 'dlg-role2',
                 title: '编辑分类描述',

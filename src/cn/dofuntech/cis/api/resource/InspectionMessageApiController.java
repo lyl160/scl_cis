@@ -87,7 +87,7 @@ public class InspectionMessageApiController extends BaseController {
 
     /**
      * 校务巡查-3种综述
-     * 教师巡查
+     * 校内执勤
      * 护校队巡查
      * 3个入口的统一新增方法
      * @param entity
@@ -146,7 +146,7 @@ public class InspectionMessageApiController extends BaseController {
             entity.setUserName(getUser().getUserName());
             entity.setImgs(imgs.toString());
             entity.setStatus("0");
-            if (entity.getTitle().contains("教师执勤") || entity.getTitle().contains("校务巡查") || entity.getTitle().contains("护校队巡查")) {
+            if (entity.getTitle().contains("校内执勤") || entity.getTitle().contains("校务巡查") || entity.getTitle().contains("护校队巡查")) {
                 entity.setReceiver(1L);
             } else {
                 entity.setReceiver(Long.parseLong(user.getId().toString()));
@@ -159,7 +159,7 @@ public class InspectionMessageApiController extends BaseController {
                     || entity.getTitle().contains("后勤巡查反馈")) {
                 //一日综述、一周综述、校园大事记、 校务巡查反馈、后勤巡查反馈 自动发布
                 pushMessage(entity.getId());
-            } else if (entity.getTitle().contains("教师执勤")
+            } else if (entity.getTitle().contains("校内执勤")
                     || entity.getTitle().contains("护校队巡查")) {
                 //教师执勤、护校队执勤 生成一条已读记录
                 pushMessageSelf(entity.getId());

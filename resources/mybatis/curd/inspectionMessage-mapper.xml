@@ -94,7 +94,9 @@
         LEFT JOIN t_school_inf s ON s.id = t.school_id
         <where>
             <include refid="condition"/>
-            and type not in (4,5)
+            <if test="notin45 != null and notin45 != ''">
+                and type not in (4,5)
+            </if>
             <if test="startHours != null and startHours != ''">
                 and STR_TO_DATE(t.add_time,'%Y-%m-%d %H:%i:%s') <![CDATA[ >= ]]> STR_TO_DATE(#{startHours},'%Y-%m-%d
                 %H:%i:%s')
