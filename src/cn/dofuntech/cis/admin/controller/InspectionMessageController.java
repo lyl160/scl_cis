@@ -160,7 +160,7 @@ public class InspectionMessageController extends AdminController<InspectionMessa
     }
 
     /**
-     * 护校队巡查明细导出
+     * 校外执勤明细导出
      *
      * @return
      */
@@ -227,13 +227,13 @@ public class InspectionMessageController extends AdminController<InspectionMessa
     }
 
     /**
-     * 护校队巡查明细导出
+     * 校外执勤明细导出
      *
      * @return
      */
     @RequestMapping(value = "/msgExport4Hxd")
     public void msgExport4Hxd(@RequestParam Map<String, Object> params, HttpServletRequest request, HttpServletResponse response) {
-        logger.info("护校队巡查明细导出======start=======参数:{}", JSON.toJSONString(params));
+        logger.info("校外执勤明细导出======start=======参数:{}", JSON.toJSONString(params));
         try {
             UAI uai = ((UAI) getRequest().getSession().getAttribute("UID"));
             //大校长为9可以查看所有的模板
@@ -278,14 +278,14 @@ public class InspectionMessageController extends AdminController<InspectionMessa
             //订单主表信息
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             OutputStream out = response.getOutputStream();
-            String title = "护校队巡查明细";
+            String title = "校外执勤明细";
             ExportExcelUtil<InspectionMessage> excelUtil = new ExportExcelUtil<InspectionMessage>();
             String pattern = "yyyy-MM-dd HH:mm:dd";
             response.setHeader("Content-Disposition", "attachment;filename=" + new String((title + ".xls").getBytes(), "iso-8859-1"));
             excelUtil.exportoExcelSorce(title, headers, null, xdataMain, out, pattern);
-            logger.info("护校队巡查明细导出成功=====");
+            logger.info("校外执勤明细导出成功=====");
         } catch (Exception ex) {
-            logger.error("护校队巡查明细数据导出异常：{}", ex.getMessage(), ex);
+            logger.error("校外执勤明细数据导出异常：{}", ex.getMessage(), ex);
         }
     }
 

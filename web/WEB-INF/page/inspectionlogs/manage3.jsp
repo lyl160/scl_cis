@@ -18,7 +18,7 @@
                                    AUTOCOMPLETE="off">&nbsp--
                             <input class="date-pic"  id="jsTime" type="text" name="jsTime" placeholder="请选择结束时间"
                                    AUTOCOMPLETE="off">
-                            <input id="keyword" type="text" name="title" value="护校队巡查" style="display:none;">
+                            <input id="keyword" type="text" name="title" value="校外执勤" style="display:none;">
                             <button class="btn btn-small btn_search" type="submit" title="搜索">
                                 搜索
                             </button>
@@ -74,7 +74,7 @@
                 total: "totalPage",
                 records: "total"
             },
-            postData: {name: "护校队巡查",ksTime:$("#ksTime").val(),jsTime:$("#jsTime").val()},
+            postData: {name: "校外执勤",ksTime:$("#ksTime").val(),jsTime:$("#jsTime").val()},
             colNames: ['id', '内容描述', '提交人', '添加时间', '地点', '操作'],
             colModel: [
                 {name: 'id', index: 'id', width: '20%'},
@@ -121,7 +121,7 @@
     function classDetail(id) {
         openDialog({
             dialogId: 'dlg-detail',
-            title: '护校队巡查管理详情',
+            title: '校外执勤管理详情',
             pageUrl: 'inspectionMessage/Detail?id=' + id,
             width: '850px',
             height: '500px'
@@ -190,9 +190,9 @@
     //导出
     function studentBillExport() {
         msg.confirm({
-            title: '确认', position: 'center', msg: '您确定要导出护校队巡查数据吗？', call: function (ok) {
+            title: '确认', position: 'center', msg: '您确定要导出校外执勤数据吗？', call: function (ok) {
                 if (ok) {
-                    window.location.href = "inspectionMessage/msgExport4Hxd?tpl=护校队巡查&" + $("form").serialize();
+                    window.location.href = "inspectionMessage/msgExport4Hxd?tpl=校外执勤&" + $("form").serialize();
                 }
             }
         });
@@ -202,7 +202,7 @@
         msg.confirm({
             title: '确认', position: 'center', msg: '您确定要导出通告明细吗？', call: function (ok) {
                 if (ok) {
-                    window.location.href = "inspectionMessage/msgExport?templateName=护校队巡查&" + $("form").serialize();
+                    window.location.href = "inspectionMessage/msgExport?templateName=校外执勤&" + $("form").serialize();
                 }
             }
         });

@@ -1,4 +1,4 @@
-<!--新增2级类别（非 护校队巡查 教师执勤）-->
+<!--新增2级类别（非 校外执勤 教师执勤）-->
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ include file="/common/head.jsp" %>
 <form class="form-horizontal">

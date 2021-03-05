@@ -60,7 +60,7 @@ public class InspectionCategoryApiController extends BaseController {
                 param2.put("pid1", category.getId());
 
                 List<InspectionCategory> categoryListLevel2 = inspectionCategoryService.query(param2);
-                if (isy.getTemplateName().equals("校内执勤") || isy.getTemplateName().equals("护校队巡查")) {
+                if (isy.getTemplateName().equals("校内执勤") || isy.getTemplateName().equals("校外执勤")) {
                     //param2.put("nowTime", nowTime);
                     List<InspectionCategory> categoryListInTime = new ArrayList<>();
                     for (InspectionCategory categoryLv2 : categoryListLevel2) {

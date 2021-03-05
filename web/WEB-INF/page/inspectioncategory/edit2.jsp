@@ -1,4 +1,4 @@
-<!--修改2级类别（护校队巡查 教师执勤）带开始结束时间-->
+<!--修改2级类别（校外执勤 校内执勤）带开始结束时间-->
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ include file="/common/head.jsp" %>
 <div class="form-horizontal"   >

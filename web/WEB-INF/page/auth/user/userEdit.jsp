@@ -52,7 +52,7 @@
 				 <input type="checkbox" value="校务巡查"  onclick="choice()">校务巡查
 				 <input type="checkbox" value="后勤巡查" onclick="choice()">后勤巡查
 				 <input type="checkbox" value="校内执勤" onclick="choice()">校内执勤
-				 <input type="checkbox" value="护校队巡查" onclick="choice()">护校队巡查
+				 <input type="checkbox" value="校外执勤" onclick="choice()">校外执勤
 				 </div> 
 				 
 				 

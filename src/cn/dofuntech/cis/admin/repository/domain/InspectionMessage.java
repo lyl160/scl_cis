@@ -15,7 +15,7 @@ public class InspectionMessage extends DefaultValue {
      */
     private static final long serialVersionUID = 1L;
 	/**
-	 * type 综述类型：1校务巡查反馈、2一周综述、3校园大事记、4教师执勤、5护校队巡查、6后勤巡查反馈
+	 * type 综述类型：1校务巡查反馈、2一周综述、3校园大事记、4校内执勤、5校外执勤、6后勤巡查反馈
 	 */
     private Long type = LONG_EMPTY;
 	/**
