@@ -237,7 +237,7 @@ public class InspectionMessageApiController extends BaseController {
         inspectionMessage.setListimgs(listings);
 
         String title = inspectionMessage.getTitle();
-        inspectionMessage.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
+        inspectionMessage.setTitleDiy(makeTitleDiyStr(title));
 
         try {
             log.info("综述已读，变更开始...");
@@ -253,6 +253,19 @@ public class InspectionMessageApiController extends BaseController {
             log.error("读取日志已读更新，{}", e.getMessage(), e);
         }
         return msg;
+    }
+
+    private String makeTitleDiyStr(String title) {
+        String result;
+        if (title.contains("校务巡查反馈")) {
+            result = title.substring(title.length() - 6) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 6));
+        } else if(title.contains("后勤巡查反馈")){
+            result = "后勤巡查反馈";
+        } else {
+            result = title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4));
+        }
+        return result;
+
     }
 
     /*@GET
@@ -400,8 +413,7 @@ public class InspectionMessageApiController extends BaseController {
             inspectionMessage.setListimgs(listings);
 
             String title = inspectionMessage.getTitle();
-            inspectionMessage.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
-
+            inspectionMessage.setTitleDiy(makeTitleDiyStr(title));
             //查询所有（阅读人数统计）  用messageid
             List<ImReadLogs> alllogs = imReadLogsService.query(map);
             //已查看
@@ -437,11 +449,7 @@ public class InspectionMessageApiController extends BaseController {
             String title;
             for (InspectionMessage message : alllogs) {
                 title = message.getTitle();
-                if (title.contains("校务巡查反馈") || title.contains("后勤巡查反馈")) {
-                    message.setTitleDiy(title.substring(title.length() - 6) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 6)));
-                } else {
-                    message.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
-                }
+                message.setTitleDiy(makeTitleDiyStr(title));
             }
 
             msg.setObj(alllogs);
@@ -452,10 +460,6 @@ public class InspectionMessageApiController extends BaseController {
         return msg;
     }
 
-    public static void main(String[] args) {
-        String title = "12345";
-        System.out.println(title.substring(title.length() - 4));
-    }
 
     @GET
     @Path("/list1")
@@ -477,11 +481,7 @@ public class InspectionMessageApiController extends BaseController {
             for (ImReadLogs readLog : alllogs) {
                 InspectionMessage message = inspectionMessageService.get(readLog.getMessageId());
                 String title = message.getTitle();
-                if (title.contains("校务巡查反馈") || title.contains("后勤巡查反馈")) {
-                    message.setTitleDiy(title.substring(title.length() - 6) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 6)));
-                } else {
-                    message.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
-                }
+                message.setTitleDiy(makeTitleDiyStr(title));
                 readLog.setInspectionMessage(message);
             }
             map.put("allcount", alllogs);
