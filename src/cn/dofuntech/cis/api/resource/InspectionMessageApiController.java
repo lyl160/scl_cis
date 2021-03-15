@@ -701,7 +701,9 @@ public class InspectionMessageApiController extends BaseController {
                     String title = teachersClockInfoVo.getTitle();
                     //todo 标题后缀移除待确认
                     title = title.replaceAll("护校队巡查", "")
-                            .replaceAll("教师执勤", "");
+                            .replaceAll("教师执勤", "")
+                            .replaceAll("校内执勤", "")
+                            .replaceAll("校外执勤", "");
                     String category = title;
                     if (title.indexOf("-") != -1) {
                         category = title.split("-")[1];
