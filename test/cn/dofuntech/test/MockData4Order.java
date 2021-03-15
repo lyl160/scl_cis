@@ -46,6 +46,7 @@ public class MockData4Order extends BaseJunit4Test {
 //        }
 //        System.out.println("%E6%95%A3%E8%A3%85%EF%BC%88%E6%B4%8B%EF%BC%89%E9%B8%A1%E8%9B%8B".startsWith("%"));
         System.out.println(URLDecoder.decode("%E6%95%A3%E8%A3%85%EF%BC%88%E6%B4%8B%EF%BC%89%E9%B8%A1%E8%9B%8B","UTF-8"));
+        System.out.println("MockData4Order.main");
     }
 
 }

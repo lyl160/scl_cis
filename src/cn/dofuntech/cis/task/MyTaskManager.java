@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import cn.dofuntech.cis.admin.controller.PlaceController;
 import cn.dofuntech.cis.admin.repository.domain.ClazzInf;
 import cn.dofuntech.cis.admin.repository.domain.DynamicAttr;
 import cn.dofuntech.cis.admin.repository.domain.InspectionCategory;
@@ -41,7 +40,6 @@ import cn.dofuntech.cis.admin.service.NoticeService;
 import cn.dofuntech.cis.admin.service.PlaceService;
 import cn.dofuntech.cis.admin.service.ScheduleService;
 import cn.dofuntech.cis.admin.service.WorkDayService;
-import cn.dofuntech.dfauth.bean.Dict;
 import cn.dofuntech.dfauth.bean.UserInf;
 import cn.dofuntech.dfauth.bean.UserRoleRelInf;
 import cn.dofuntech.dfauth.service.DictService;
@@ -170,12 +168,12 @@ public class MyTaskManager {
     }
 
     /**
-     * 每天6点到18点每5分钟执行一次值班通知(教师执勤)
+     * 每天6点到18点每5分钟执行一次值班通知(校内执勤)
      * 目的 提前5分钟通知教师去执勤
      */
     @Scheduled(cron = "0 0/5 6-18 * * ? ")
     public void jiaoshiNotice() throws Exception {
-        logger.info("教师执勤，值班通知");
+        logger.info("校内执勤，值班通知");
         logger.info("每天6点到18点每隔5分钟，自动推送值班消息...");
 
 
@@ -184,7 +182,7 @@ public class MyTaskManager {
         Map<String, Object> scheduleParam = new HashMap<String, Object>();
         Map<String, Object> categoryParam = new HashMap<String, Object>();
         scheduleParam.put("dutyDate", sdf.format(System.currentTimeMillis()));
-        scheduleParam.put("templateName", "教师执勤");
+        scheduleParam.put("templateName", "校内执勤");
         //得到今天所有要推送的消息
         List<Schedule> scheduleList = scheduleService.query(scheduleParam);
         if (scheduleList != null && scheduleList.size() > 0) {
@@ -196,9 +194,9 @@ public class MyTaskManager {
                 //要值班的用户
                 List<UserInf> userList = scheduleService.getTeachersBySchedule(schedule);
 
-                categoryParam.put("templateName", "教师执勤");
+                categoryParam.put("templateName", "校内执勤");
                 categoryParam.put("schoolId", schedule.getSchoolId());
-                //获取全部 教师执勤 巡检项目
+                //获取全部 校内执勤 巡检项目
                 List<InspectionCategory> categoryAllList = inspectionCategoryService.query(categoryParam);
                 for (InspectionCategory category : categoryAllList) {
                     String content = "";
@@ -211,7 +209,7 @@ public class MyTaskManager {
                         for (UserInf userInfo : userList) {
                             //查询今天该用户提交的执勤消息
                             Map<String, Object> messageParam = new HashMap<String, Object>();
-                            messageParam.put("title", "教师执勤");
+                            messageParam.put("title", "校内执勤");
                             messageParam.put("startHours", sdf.format(nowDate) + " " + category.getStartTime() + ":00");//今天+开始时间
                             messageParam.put("endHours", sdf.format(nowDate) + " " + category.getEndTime() + ":00");//今天+结束时间
                             messageParam.put("userId", userInfo.getId());
@@ -255,12 +253,12 @@ public class MyTaskManager {
     }
 
     /**
-     * 每天6点到18点每5分钟执行一次值班通知(护校队巡查)
+     * 每天6点到18点每5分钟执行一次值班通知(校外执勤)
      * 目的 提前5分钟通知护校队去巡查
      */
     @Scheduled(cron = "10 0/5 6-18 * * ? ")
     public void huxiaoduiNotice() throws Exception {
-        logger.info("护校队巡查，值班通知...");
+        logger.info("校外执勤，值班通知...");
         logger.info("每天6点到18点，每隔5分钟，自动推送值班消息...");
 
         Timestamp nowDate = new Timestamp((System.currentTimeMillis() / 1000) * 1000);
@@ -268,7 +266,7 @@ public class MyTaskManager {
         Map<String, Object> scheduleParam = new HashMap<String, Object>();
         Map<String, Object> categoryParam = new HashMap<String, Object>();
         scheduleParam.put("dutyDate", sdf.format(System.currentTimeMillis()));
-        scheduleParam.put("templateName", "护校队巡查");
+        scheduleParam.put("templateName", "校外执勤");
         //得到今天所有要推送的消息
         List<Schedule> scheduleList = scheduleService.query(scheduleParam);
         if (scheduleList != null && scheduleList.size() > 0) {
@@ -280,9 +278,9 @@ public class MyTaskManager {
                 //要值班的用户
                 List<UserInf> userList = scheduleService.getTeachersBySchedule(schedule);
 
-                categoryParam.put("templateName", "护校队巡查");
+                categoryParam.put("templateName", "校外执勤");
                 categoryParam.put("schoolId", schedule.getSchoolId());
-                //获取全部 教师执勤 巡检项目
+                //获取全部 校内执勤 巡检项目
                 List<InspectionCategory> categoryAllList = inspectionCategoryService.query(categoryParam);
                 for (InspectionCategory category : categoryAllList) {
                     //找出5分钟之后符合时间范围的项目
@@ -294,7 +292,7 @@ public class MyTaskManager {
                         for (UserInf userInfo : userList) {
                             //查询今天该用户提交的执勤消息
                             Map<String, Object> messageParam = new HashMap<String, Object>();
-                            messageParam.put("title", "护校队巡查");
+                            messageParam.put("title", "校外执勤");
                             messageParam.put("startHours", sdf.format(nowDate) + " " + category.getStartTime() + ":00");//今天+开始时间
                             messageParam.put("endHours", sdf.format(nowDate) + " " + category.getEndTime() + ":00");//今天+结束时间
                             messageParam.put("userId", userInfo.getId());
@@ -685,12 +683,12 @@ public class MyTaskManager {
     }
 
     /**
-     * 每天6点到18点 偏移2分钟 每5分钟执行一次,查看是否巡查超时并通告(教师执勤)
+     * 每天6点到18点 偏移2分钟 每5分钟执行一次,查看是否巡查超时并通告(校内执勤)
      * 任务开始后，2分钟未打卡的，系统自动通告（通告消息集中一条发出） 通告给roleId 1（超管）,5（校长）,8（校务行政）的老师
      */
     @Scheduled(cron = "0 2/5 6-18 * * ? ")
     public void jiaoshiNoticeMx() throws Exception {
-        logger.info("教师执勤未到岗通告...");
+        logger.info("校内执勤未到岗通告...");
         logger.info("每天6点到18点每隔5分钟，自动通告...");
 
         Timestamp nowDate = new Timestamp((System.currentTimeMillis() / 1000) * 1000);
@@ -698,7 +696,7 @@ public class MyTaskManager {
         Map<String, Object> scheduleParam = new HashMap<String, Object>();
         Map<String, Object> categoryParam = new HashMap<String, Object>();
         scheduleParam.put("dutyDate", sdf.format(System.currentTimeMillis()));
-        scheduleParam.put("templateName", "教师执勤");
+        scheduleParam.put("templateName", "校内执勤");
         //根据排班表得到今天所有要推送的消息
         List<Schedule> scheduleList = scheduleService.query(scheduleParam);
         if (scheduleList != null && scheduleList.size() > 0) {
@@ -710,9 +708,9 @@ public class MyTaskManager {
                 //要值班的用户
                 List<UserInf> userList = scheduleService.getTeachersBySchedule(schedule);
 
-                categoryParam.put("templateName", "教师执勤");
+                categoryParam.put("templateName", "校内执勤");
                 categoryParam.put("schoolId", schedule.getSchoolId());
-                //获取全部 教师执勤 巡检项目
+                //获取全部 校内执勤 巡检项目
                 List<InspectionCategory> categoryAllList = inspectionCategoryService.query(categoryParam);
                 for (InspectionCategory category : categoryAllList) {
                     StringBuffer timeContent = new StringBuffer();
@@ -726,7 +724,7 @@ public class MyTaskManager {
                         for (UserInf userInfo : userList) {
                             //查询今天该用户提交的执勤消息
                             Map<String, Object> messageParam = new HashMap<String, Object>();
-                            messageParam.put("title", "教师执勤");
+                            messageParam.put("title", "校内执勤");
                             messageParam.put("startHours", sdf.format(nowDate) + " " + category.getStartTime() + ":00");//今天+开始时间
                             messageParam.put("endHours", sdf.format(nowDate) + " " + category.getEndTime() + ":00");//今天+结束时间
                             messageParam.put("userId", userInfo.getId());
@@ -746,7 +744,7 @@ public class MyTaskManager {
                                 noticeMxParam.put("userName", userInfo.getUserName());
                                 noticeMxParam.put("dutyDate", schedule.getDutyDate());
                                 noticeMxParam.put("schoolId", schedule.getSchoolId());
-                                noticeMxParam.put("templateName", "教师执勤");
+                                noticeMxParam.put("templateName", "校内执勤");
                                 List noticeMxList = noticeMxService.query(noticeMxParam);
                                 if (noticeMxList != null && noticeMxList.size() > 0) {
                                     logger.debug("用户：{}没有执勤消息,已经通告过，无需再次通告", userInfo.getUserName());
@@ -762,7 +760,7 @@ public class MyTaskManager {
                                 noticeMx.setDutyDate(schedule.getDutyDate());
                                 noticeMx.setStartTime(category.getStartTime());
                                 noticeMx.setEndTime(category.getEndTime());
-                                noticeMx.setTemplateName("教师执勤");
+                                noticeMx.setTemplateName("校内执勤");
                                 noticeMx.setSchoolId(schedule.getSchoolId() + "");
                                 if (place != null) {
                                     teacherName.append(place.getPlaceName()).append("(值班老师：" + userInfo.getUserName() + ")、");
@@ -814,7 +812,7 @@ public class MyTaskManager {
 
 
     /**
-     * 每天6点到18点 偏移2分钟5秒  每5分钟执行一次,查看是否巡查超时并通告(护校队巡查)
+     * 每天6点到18点 偏移2分钟5秒  每5分钟执行一次,查看是否巡查超时并通告(校外执勤)
      * 通告该校roleId 1（超管）,5（校长）,8（校务行政）
      */
     @Scheduled(cron = "5 2/5 6-18 * * ? ")
@@ -827,7 +825,7 @@ public class MyTaskManager {
         Map<String, Object> scheduleParam = new HashMap<String, Object>();
         Map<String, Object> categoryParam = new HashMap<String, Object>();
         scheduleParam.put("dutyDate", sdf.format(System.currentTimeMillis()));
-        scheduleParam.put("templateName", "护校队巡查");
+        scheduleParam.put("templateName", "校外执勤");
         //得到今天所有要推送的消息
         List<Schedule> scheduleList = scheduleService.query(scheduleParam);
         if (scheduleList != null && scheduleList.size() > 0) {
@@ -839,9 +837,9 @@ public class MyTaskManager {
                 //要值班的用户
                 List<UserInf> userList = scheduleService.getTeachersBySchedule(schedule);
 
-                categoryParam.put("templateName", "护校队巡查");
+                categoryParam.put("templateName", "校外执勤");
                 categoryParam.put("schoolId", schedule.getSchoolId());
-                //获取全部 教师执勤 巡检项目
+                //获取全部 校内执勤 巡检项目
                 List<InspectionCategory> categoryAllList = inspectionCategoryService.query(categoryParam);
                 for (InspectionCategory category : categoryAllList) {
                     StringBuffer timeContent = new StringBuffer();
@@ -855,7 +853,7 @@ public class MyTaskManager {
                         for (UserInf userInfo : userList) {
                             //查询今天该用户提交的执勤消息
                             Map<String, Object> messageParam = new HashMap<String, Object>();
-                            messageParam.put("title", "护校队巡查");
+                            messageParam.put("title", "校外执勤");
                             messageParam.put("startHours", sdf.format(nowDate) + " " + category.getStartTime() + ":00");//今天+开始时间
                             messageParam.put("endHours", sdf.format(nowDate) + " " + category.getEndTime() + ":00");//今天+结束时间
                             messageParam.put("userId", userInfo.getId());
@@ -875,7 +873,7 @@ public class MyTaskManager {
                                 noticeMxParam.put("userName", userInfo.getUserName());
                                 noticeMxParam.put("dutyDate", schedule.getDutyDate());
                                 noticeMxParam.put("schoolId", schedule.getSchoolId());
-                                noticeMxParam.put("templateName", "护校队巡查");
+                                noticeMxParam.put("templateName", "校外执勤");
                                 List noticeMxList = noticeMxService.query(noticeMxParam);
                                 if (noticeMxList != null && noticeMxList.size() > 0) {
                                     logger.debug("用户：{}没有执勤消息,已经通告过，无需再次通告", userInfo.getUserName());
@@ -892,7 +890,7 @@ public class MyTaskManager {
                                 noticeMx.setDutyDate(schedule.getDutyDate());
                                 noticeMx.setStartTime(category.getStartTime());
                                 noticeMx.setEndTime(category.getEndTime());
-                                noticeMx.setTemplateName("护校队巡查");
+                                noticeMx.setTemplateName("校外执勤");
                                 noticeMx.setSchoolId(schedule.getSchoolId() + "");
                                 if (place != null) {
                                     teacherName.append(place.getPlaceName()).append("(值班老师：" + userInfo.getUserName() + ")、");

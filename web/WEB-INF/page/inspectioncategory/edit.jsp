@@ -1,4 +1,4 @@
-<!--修改2级类别（非护校队巡查 教师执勤）选择老师-->
+<!--修改2级类别（非 校外执勤 教师执勤）选择老师-->
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ include file="/common/head.jsp" %>
 <form class="form-horizontal" role="form" onsubmit="return submitForm(this);" action="inspectionCategory/save1">

@@ -1,4 +1,4 @@
-<%--教师巡查--%>
+<%--校内执勤--%>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ include file="/common/head.jsp" %>
 <link rel="stylesheet" href="static/ace_v1.3/assets/css/ui.jqgrid.css"/>
@@ -18,7 +18,7 @@
                                    AUTOCOMPLETE="off">&nbsp--
                             <input class="date-pic"  id="jsTime" type="text" name="jsTime" placeholder="请选择结束时间"
                                    AUTOCOMPLETE="off">
-                            <input id="keyword" type="text" name="title" value="教师执勤" style="display:none;">
+                            <input id="keyword" type="text" name="title" value="校内执勤" style="display:none;">
                             <button class="btn btn-small btn_search" type="submit" title="搜索">
                                 搜索
                             </button>
@@ -38,7 +38,7 @@
         <table id="grid-table"></table>
         <div id="grid-pager"></div>
         <div style="margin-top: 10px">
-            <span><a class="btn btn-small btn-add" onclick="studentBillExport();">导出教师巡查数据</a></span>
+            <span><a class="btn btn-small btn-add" onclick="studentBillExport();">导出校内执勤数据</a></span>
             <span><a class="btn btn-small btn-add" onclick="studentBillExport2();">导出通告明细</a></span>
             <span id="paging_bar" style="float: right"> </span>
         </div>
@@ -74,7 +74,7 @@
                 total: "totalPage",
                 records: "total"
             },
-            postData: {name: "教师执勤",ksTime:$("#ksTime").val(),jsTime:$("#jsTime").val()},
+            postData: {name: "校内执勤",ksTime:$("#ksTime").val(),jsTime:$("#jsTime").val()},
             colNames: ['id', '内容描述', '提交人', '添加时间', '地点', '操作'],
             colModel: [
                 {name: 'id', index: 'id', width: '20%'},
@@ -121,7 +121,7 @@
     function classDetail(id) {
         openDialog({
             dialogId: 'dlg-detail',
-            title: '教师巡查管理详情',
+            title: '校内执勤管理详情',
             pageUrl: 'inspectionMessage/Detail?id=' + id,
             width: '850px',
             height: '500px'
@@ -190,9 +190,9 @@
     //导出
     function studentBillExport() {
         msg.confirm({
-            title: '确认', position: 'center', msg: '您确定要导出教师巡查数据吗？', call: function (ok) {
+            title: '确认', position: 'center', msg: '您确定要导出校内执勤数据吗？', call: function (ok) {
                 if (ok) {
-                    window.location.href = "inspectionMessage/msgExport4Js?tpl=教师执勤&" + $("form").serialize();
+                    window.location.href = "inspectionMessage/msgExport4Js?tpl=校内执勤&" + $("form").serialize();
                 }
             }
         });
@@ -202,7 +202,7 @@
         msg.confirm({
             title: '确认', position: 'center', msg: '您确定要导出通告明细吗？', call: function (ok) {
                 if (ok) {
-                    window.location.href = "inspectionMessage/msgExport?templateName=教师执勤&" + $("form").serialize();
+                    window.location.href = "inspectionMessage/msgExport?templateName=校内执勤&" + $("form").serialize();
                 }
             }
         });

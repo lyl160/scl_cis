@@ -34,7 +34,7 @@ public class InspectionCategoryServiceImpl extends DunfengServiceImpl<Inspection
     private InspectionCategoryMapper inspectionCategoryMapper;
 
     /**
-     * 教师执勤 和 护校队巡查 检查当前时间 是否符合 二级分类设定的通用时间 和 自定义时间
+     * 校内执勤 和 校外执勤 检查当前时间 是否符合 二级分类设定的通用时间 和 自定义时间
      *
      * @param category
      * @param date     当前时间

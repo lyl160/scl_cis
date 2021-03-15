@@ -78,7 +78,7 @@ public class DynamicAttrController extends AdminController<DynamicAttr> {
         map.put("templateId", request.getParameter("templateId"));
         map.put("schoolId", request.getParameter("schoolId"));
         map.put("tname", request.getParameter("tname"));
-        if (request.getParameter("tname").equals("校务巡查") || request.getParameter("tname").equals("教师执勤")) {
+        if (request.getParameter("tname").equals("校务巡查") || request.getParameter("tname").equals("校内执勤")) {
             return "inspectiontemplate/template_add";
         } else if (request.getParameter("tname").equals("后勤巡查")) {
             return "inspectiontemplate/template_add2";

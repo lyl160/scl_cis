@@ -290,7 +290,7 @@ public class InspectionLogsController extends AdminController<InspectionLogs> {
     }
 
     /**
-     * 教师巡查  护校队巡查调用
+     * 校内执勤  校外执勤调用
      * @param params
      * @param page
      * @param rows

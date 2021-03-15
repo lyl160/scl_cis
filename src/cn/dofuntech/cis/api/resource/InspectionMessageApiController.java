@@ -99,8 +99,8 @@ public class InspectionMessageApiController extends BaseController {
 
     /**
      * 校务巡查-3种综述
-     * 教师巡查
-     * 护校队巡查
+     * 校内执勤
+     * 校外执勤
      * 3个入口的统一新增方法
      *
      * @param entity
@@ -159,7 +159,7 @@ public class InspectionMessageApiController extends BaseController {
             entity.setUserName(getUser().getUserName());
             entity.setImgs(imgs.toString());
             entity.setStatus("0");
-            if (entity.getTitle().contains("教师执勤") || entity.getTitle().contains("校务巡查") || entity.getTitle().contains("护校队巡查")) {
+            if (entity.getTitle().contains("校内执勤") || entity.getTitle().contains("校务巡查") || entity.getTitle().contains("校外执勤")) {
                 entity.setReceiver(1L);
             } else {
                 entity.setReceiver(Long.parseLong(user.getId().toString()));
@@ -172,8 +172,8 @@ public class InspectionMessageApiController extends BaseController {
                     || entity.getTitle().contains("后勤巡查反馈")) {
                 //一日综述、一周综述、校园大事记、 校务巡查反馈、后勤巡查反馈 自动发布
                 pushMessage(entity.getId());
-            } else if (entity.getTitle().contains("教师执勤")
-                    || entity.getTitle().contains("护校队巡查")) {
+            } else if (entity.getTitle().contains("校内执勤")
+                    || entity.getTitle().contains("校外执勤")) {
                 //教师执勤、护校队执勤 生成一条已读记录
                 pushMessageSelf(entity.getId());
             }
@@ -237,11 +237,7 @@ public class InspectionMessageApiController extends BaseController {
         inspectionMessage.setListimgs(listings);
 
         String title = inspectionMessage.getTitle();
-        if (title.contains("护校队巡查")) {
-            inspectionMessage.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
-        } else {
-            inspectionMessage.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
-        }
+        inspectionMessage.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
 
         try {
             log.info("综述已读，变更开始...");
@@ -335,7 +331,7 @@ public class InspectionMessageApiController extends BaseController {
         return msg;
     }
 
-    public ReturnMsg pushMessageManager(@ApiParam(name = "message_id", required = true, value = "一日综述ID") @PathParam("message_id") Long message_id) {
+    public ReturnMsg pushMessageManager(Long message_id) {
         ReturnMsg msg = new ReturnMsg();
         Long userId = (long) getUser().getId();
         InspectionMessage inspectionMessage = inspectionMessageService.get(message_id);
@@ -359,6 +355,9 @@ public class InspectionMessageApiController extends BaseController {
             List<UserRoleRelInf> list = userRoleRelService.queryManager(map);
             for (UserRoleRelInf u : list) {
                 logger.debug("推送管理人员,开始...id是" + u.getUserId());
+                if (u.getUserId().toString().equals(userId.toString())) {
+                    continue;
+                }
                 entity.setUserId((long) u.getUserId());
                 UserInf userInfParam = new UserInf();
                 userInfParam.setId(u.getUserId());
@@ -401,11 +400,7 @@ public class InspectionMessageApiController extends BaseController {
             inspectionMessage.setListimgs(listings);
 
             String title = inspectionMessage.getTitle();
-            if (title.contains("护校队巡查")) {
-                inspectionMessage.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
-            } else {
-                inspectionMessage.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
-            }
+            inspectionMessage.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
 
             //查询所有（阅读人数统计）  用messageid
             List<ImReadLogs> alllogs = imReadLogsService.query(map);
@@ -442,11 +437,7 @@ public class InspectionMessageApiController extends BaseController {
             String title;
             for (InspectionMessage message : alllogs) {
                 title = message.getTitle();
-                if (title.contains("后勤巡查反馈")) {
-                    message.setTitleDiy(title);
-                } else if (title.contains("护校队巡查")) {
-                    message.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
-                } else if (title.contains("校务巡查反馈") || title.contains("后勤巡查反馈")) {
+                if (title.contains("校务巡查反馈") || title.contains("后勤巡查反馈")) {
                     message.setTitleDiy(title.substring(title.length() - 6) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 6)));
                 } else {
                     message.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
@@ -486,11 +477,7 @@ public class InspectionMessageApiController extends BaseController {
             for (ImReadLogs readLog : alllogs) {
                 InspectionMessage message = inspectionMessageService.get(readLog.getMessageId());
                 String title = message.getTitle();
-                if (title.contains("后勤巡查反馈")) {
-                    message.setTitleDiy(title);
-                } else if (title.contains("护校队巡查")) {
-                    message.setTitleDiy(title.substring(title.length() - 5) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 5)));
-                } else if (title.contains("校务巡查反馈") || title.contains("后勤巡查反馈")) {
+                if (title.contains("校务巡查反馈") || title.contains("后勤巡查反馈")) {
                     message.setTitleDiy(title.substring(title.length() - 6) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 6)));
                 } else {
                     message.setTitleDiy(title.substring(title.length() - 4) + "-" + (title.split("-")[1].substring(0, title.split("-")[1].length() - 4)));
