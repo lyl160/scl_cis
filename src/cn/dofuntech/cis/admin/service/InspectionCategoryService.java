@@ -23,5 +23,5 @@ public interface InspectionCategoryService extends DunfengService<InspectionCate
 
     List<InspectionCategory> queryByParam(Map<String, Object> map);
 
-    String getTemplateIdByType(String schoolId, String type);
+    Long getTemplateIdByType(String schoolId, String type);
 }

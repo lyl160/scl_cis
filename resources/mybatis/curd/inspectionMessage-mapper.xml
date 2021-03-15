@@ -95,14 +95,17 @@
     </select>
 
     <select id="queryTeacherDutyList" resultType="cn.dofuntech.cis.admin.repository.domain.vo.TeachersDutyVo">
-        select aa.user_id as userId, count(0) as count
-        from (
-                 select distinct user_id, title, DATE_FORMAT(add_time, '%Y-%m-%d')
-                 from t_inspection_message t
-                 where t.type in (4, 5)
-                   and t.school_id = #{schoolId}
-                   and t.add_time BETWEEN #{startDate} and #{endDate}) aa
-        group by aa.user_id
+        select bb.*, cc.user_name as userName
+        from (select aa.user_id as userId, count(0) as count
+              from (
+                       select distinct user_id, title, DATE_FORMAT(add_time, '%Y-%m-%d')
+                       from t_inspection_message t
+                       where t.type in (4, 5)
+                         and t.school_id = #{schoolId}
+                         and t.add_time BETWEEN #{startDate} and #{endDate}) aa
+              group by aa.user_id) bb
+                 inner join auth_user_inf cc on bb.userId = cc.id
+        order by cc.user_name desc
     </select>
 
     <!-- 条件查询-->

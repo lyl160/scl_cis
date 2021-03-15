@@ -137,16 +137,29 @@ public class InspectionCategoryServiceImpl extends DunfengServiceImpl<Inspection
     }
 
     @Override
-    public String getTemplateIdByType(String schoolId, String type) {
+    public Long getTemplateIdByType(String schoolId, String type) {
         if ("1".equals(schoolId)) {
             if ("4".equals(type)) {
-                return "3";
+                return 3L;
             }
             if ("5".equals(type)) {
-                return "4";
+                return 4L;
+            }
+        } else if ("2".equals(schoolId)) {
+            if ("4".equals(type)) {
+                return 10L;
+            }
+            if ("5".equals(type)) {
+                return 11L;
+            }
+        } else if ("3".equals(schoolId)) {
+            if ("4".equals(type)) {
+                return 6L;
+            }
+            if ("5".equals(type)) {
+                return 7L;
             }
         }
-        //todo 需要补充其他学校的映射关系
         return null;
     }
 }

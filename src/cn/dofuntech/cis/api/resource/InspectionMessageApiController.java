@@ -582,21 +582,39 @@ public class InspectionMessageApiController extends BaseController {
             scheduleQueryParam.put("schoolId", schoolId);
             //查询老师值班
             List<Schedule> scheduleList = scheduleService.query(scheduleQueryParam);
-            Map<String, List<String>> teacherScheduleMap = new HashMap<>();
+            //校内执勤模板ID
+            Long xnTemolateId = inspectionCategoryService.getTemplateIdByType(schoolId, "4");
+            Long xwTemolateId = inspectionCategoryService.getTemplateIdByType(schoolId, "5");
+            //校内执勤、校外执勤分类，值班分别统计
+            Map<String, List<String>> xnteacherScheduleMap = new HashMap<>();
+            Map<String, List<String>> xwteacherScheduleMap = new HashMap<>();
             if (null != scheduleList && scheduleList.size() > 0) {
                 for (Schedule schedule : scheduleList) {
                     if (StringUtils.isNotBlank(schedule.getUsers())) {
                         String[] userArr = schedule.getUsers().split(",");
                         for (String userId : userArr) {
-                            if (teacherScheduleMap.containsKey(userId)) {
-                                List<String> teacherScheduleList = teacherScheduleMap.get(userId);
-                                if (!teacherScheduleList.contains(schedule.getDutyDate())) {
+                            if (xnTemolateId.equals(schedule.getTemplateId())) {
+                                if (xnteacherScheduleMap.containsKey(userId)) {
+                                    List<String> teacherScheduleList = xnteacherScheduleMap.get(userId);
+                                    if (!teacherScheduleList.contains(schedule.getDutyDate())) {
+                                        teacherScheduleList.add(schedule.getDutyDate());
+                                    }
+                                } else {
+                                    List<String> teacherScheduleList = new ArrayList<>();
                                     teacherScheduleList.add(schedule.getDutyDate());
+                                    xnteacherScheduleMap.put(userId, teacherScheduleList);
                                 }
-                            } else {
-                                List<String> teacherScheduleList = new ArrayList<>();
-                                teacherScheduleList.add(schedule.getDutyDate());
-                                teacherScheduleMap.put(userId, teacherScheduleList);
+                            } else if (xwTemolateId.equals(schedule.getTemplateId())) {
+                                if (xwteacherScheduleMap.containsKey(userId)) {
+                                    List<String> teacherScheduleList = xwteacherScheduleMap.get(userId);
+                                    if (!teacherScheduleList.contains(schedule.getDutyDate())) {
+                                        teacherScheduleList.add(schedule.getDutyDate());
+                                    }
+                                } else {
+                                    List<String> teacherScheduleList = new ArrayList<>();
+                                    teacherScheduleList.add(schedule.getDutyDate());
+                                    xwteacherScheduleMap.put(userId, teacherScheduleList);
+                                }
                             }
                         }
                     }
@@ -604,14 +622,21 @@ public class InspectionMessageApiController extends BaseController {
                 //查询老师列表
                 Map<String, Object> inspectionCategoryQueryParam = new HashMap<>();
                 inspectionCategoryQueryParam.put("ilevel", 2);
-                inspectionCategoryQueryParam.put("templateIds", Arrays.asList(inspectionCategoryService.getTemplateIdByType(schoolId, "4"),
-                        inspectionCategoryService.getTemplateIdByType(schoolId, "5")));
+                inspectionCategoryQueryParam.put("templateIds", Arrays.asList(xnTemolateId, xwTemolateId));
                 inspectionCategoryQueryParam.put("schoolId", schoolId);
-                //查询分类
+                //查询校内执勤、校外执勤分类梳理
                 List<InspectionCategory> categoryList = inspectionCategoryService.queryByParam(inspectionCategoryQueryParam);
-                int categoryCount = 0;
+                //分别获取校内执勤、校外执勤的二级分类个数
+                int xnCategoryCount = 0;
+                int xwCategoryCount = 0;
                 if (null != categoryList) {
-                    categoryCount = categoryList.size();
+                    for (InspectionCategory inspectionCategory : categoryList) {
+                        if (xnTemolateId.equals(inspectionCategory.getTemplateId())) {
+                            xnCategoryCount++;
+                        } else if (xwTemolateId.equals(inspectionCategory.getTemplateId())) {
+                            xwCategoryCount++;
+                        }
+                    }
                 }
                 //获取老师打卡信息
                 Map<String, Object> queryTeacherDutyParam = new HashMap<>();
@@ -619,37 +644,12 @@ public class InspectionMessageApiController extends BaseController {
                 queryTeacherDutyParam.put("endDate", endDate + " 23:59:59");
                 queryTeacherDutyParam.put("schoolId", schoolId);
                 List<TeachersDutyVo> dutyVoList = inspectionMessageService.queryTeacherDutyList(queryTeacherDutyParam);
-                Map<String, Integer> teacherDutyMap = new HashMap<>();
                 if (null != dutyVoList && dutyVoList.size() > 0) {
                     for (TeachersDutyVo currentVo : dutyVoList) {
-                        teacherDutyMap.put(currentVo.getUserId(), currentVo.getCount());
+                        //获取打卡统计信息
+                        teachersClockVoList.add(getTeachersClockVo(currentVo, xnteacherScheduleMap, xwteacherScheduleMap, xnCategoryCount, xwCategoryCount));
                     }
                 }
-                for (String userId : teacherScheduleMap.keySet()) {
-                    List<String> dutyList = teacherScheduleMap.get(userId);
-                    UserInf userInfo = new UserInf();
-                    userInfo.setId(Integer.parseInt(userId));
-                    userInfo = userService.getEntity(userInfo);
-                    TeachersClockVo teachersClockVo = new TeachersClockVo();
-                    teachersClockVo.setTeacherName(userInfo.getUserName());
-                    teachersClockVo.setUserId(userId);
-                    Integer totalCount = dutyList.size() * categoryCount;
-                    Integer clockCount = teacherDutyMap.get(userId);
-                    if (null == clockCount) {
-                        clockCount = 0;
-                    }
-                    teachersClockVo.setTotalCount(totalCount);
-                    teachersClockVo.setClockCount(clockCount);
-                    teachersClockVo.setUnClockCount(totalCount - clockCount);
-                    teachersClockVoList.add(teachersClockVo);
-                }
-                //按老师名字排序
-                Collections.sort(teachersClockVoList, new Comparator<TeachersClockVo>() {
-                    @Override
-                    public int compare(TeachersClockVo o1, TeachersClockVo o2) {
-                        return o1.getTeacherName().compareTo(o1.getTeacherName());
-                    }
-                });
             }
             msg.setObj(teachersClockVoList);
         } catch (Exception e) {
@@ -657,6 +657,41 @@ public class InspectionMessageApiController extends BaseController {
             InspectionMessageApiController.log.error("查询数据异常:{}", e.getMessage(), e);
         }
         return msg;
+    }
+
+
+    /**
+     * 获取老师打卡统计信息
+     *
+     * @param currentVo            老师实际打卡信息
+     * @param xnteacherScheduleMap 老师校内值班信息
+     * @param xwteacherScheduleMap 老师校外值班信息
+     * @param xnCategoryCount      校内执勤二级分类个数
+     * @param xwCategoryCount      校外执勤二级分类个数
+     * @return
+     */
+    private TeachersClockVo getTeachersClockVo(TeachersDutyVo currentVo, Map<String, List<String>> xnteacherScheduleMap,
+                                               Map<String, List<String>> xwteacherScheduleMap, int xnCategoryCount, int xwCategoryCount) throws Exception {
+        String userId = currentVo.getUserId();
+        //校内执勤排班
+        List<String> xnteacherScheduleList = xnteacherScheduleMap.get(userId);
+        //校外执勤排班
+        List<String> xwteacherScheduleList = xwteacherScheduleMap.get(userId);
+        int xnpbCount = null != xnteacherScheduleList ? xnteacherScheduleList.size() * xnCategoryCount : 0;
+        int xwpbCount = null != xwteacherScheduleList ? xwteacherScheduleList.size() * xwCategoryCount : 0;
+        Integer clockCount = currentVo.getCount();
+        if (null == clockCount) {
+            clockCount = 0;
+        }
+        int totalCount = xnpbCount + xwpbCount;
+        int unClockCount = totalCount - clockCount > 0 ? totalCount - clockCount : 0;
+        TeachersClockVo teachersClockVo = new TeachersClockVo();
+        teachersClockVo.setTeacherName(currentVo.getUserName());
+        teachersClockVo.setUserId(userId);
+        teachersClockVo.setTotalCount(totalCount);
+        teachersClockVo.setClockCount(clockCount);
+        teachersClockVo.setUnClockCount(unClockCount);
+        return teachersClockVo;
     }
 
     //打卡统计查询
@@ -699,10 +734,7 @@ public class InspectionMessageApiController extends BaseController {
                 }
                 for (TeachersClockInfoVo teachersClockInfoVo : teachersClockInfoVoList) {
                     String title = teachersClockInfoVo.getTitle();
-                    //todo 标题后缀移除待确认
-                    title = title.replaceAll("护校队巡查", "")
-                            .replaceAll("教师执勤", "")
-                            .replaceAll("校内执勤", "")
+                    title = title.replaceAll("校内执勤", "")
                             .replaceAll("校外执勤", "");
                     String category = title;
                     if (title.indexOf("-") != -1) {

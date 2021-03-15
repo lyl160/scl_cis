@@ -10,6 +10,8 @@ public class TeachersDutyVo {
      */
     private String userId;
 
+    private String userName;
+
     /**
      * 打卡次数
      */
@@ -29,5 +31,13 @@ public class TeachersDutyVo {
 
     public void setCount(Integer count) {
         this.count = count;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 }
