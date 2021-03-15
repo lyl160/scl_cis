@@ -1,12 +1,19 @@
 package cn.dofuntech.cis.api.resource;
 
 import cn.dofuntech.cis.admin.repository.domain.ImReadLogs;
+import cn.dofuntech.cis.admin.repository.domain.InspectionCategory;
 import cn.dofuntech.cis.admin.repository.domain.InspectionMessage;
+import cn.dofuntech.cis.admin.repository.domain.Schedule;
+import cn.dofuntech.cis.admin.repository.domain.vo.TeachersClockInfoVo;
+import cn.dofuntech.cis.admin.repository.domain.vo.TeachersClockQueryVo;
+import cn.dofuntech.cis.admin.repository.domain.vo.TeachersClockVo;
+import cn.dofuntech.cis.admin.repository.domain.vo.TeachersDutyVo;
 import cn.dofuntech.cis.admin.service.*;
 import cn.dofuntech.cis.api.bean.ReturnMsg;
 import cn.dofuntech.cis.api.resource.base.BaseController;
 import cn.dofuntech.cis.api.util.ImageUpload;
 import cn.dofuntech.cis.bean.EnvUtil;
+import cn.dofuntech.core.util.DateUtils;
 import cn.dofuntech.dfauth.bean.Dict;
 import cn.dofuntech.dfauth.bean.UserInf;
 import cn.dofuntech.dfauth.bean.UserRoleRelInf;
@@ -15,10 +22,12 @@ import cn.dofuntech.dfauth.service.RoleService;
 import cn.dofuntech.dfauth.service.UserRoleRelService;
 import cn.dofuntech.dfauth.service.UserService;
 import com.wordnik.swagger.annotations.*;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -35,13 +44,16 @@ public class InspectionMessageApiController extends BaseController {
     private static Logger log = LoggerFactory.getLogger(InspectionMessageApiController.class);
 
     @Autowired
-    private InspectionLogsService inspectionLogsService;
+    private InspectionCategoryService inspectionCategoryService;
 
     @Autowired
     private InspectionResultService inspectionResultService;
 
     @Autowired
     private ClazzInfService clazzInfService;
+
+    @Autowired
+    private ScheduleService scheduleService;
 
     @Autowired
     private EnvUtil envUtil;
@@ -90,6 +102,7 @@ public class InspectionMessageApiController extends BaseController {
      * 教师巡查
      * 护校队巡查
      * 3个入口的统一新增方法
+     *
      * @param entity
      * @return
      */
@@ -551,6 +564,172 @@ public class InspectionMessageApiController extends BaseController {
         } catch (Exception e) {
             msg.setFail("上报校长，异常:" + e.getMessage());
             log.error("上报校长，{}", e.getMessage(), e);
+        }
+        return msg;
+    }
+
+    //打卡统计查询
+    @POST
+    @Path("/queryDKhebdomad")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
+    @ApiOperation(value = "打卡统计", notes = "More notes about this method", response = ReturnMsg.class, httpMethod = "POST")
+    @ApiResponses(value = {@ApiResponse(message = "无数据", code = 200)})
+    public @ResponseBody
+    ReturnMsg queryDKhebdomad(TeachersClockQueryVo queryVo) {
+        List<TeachersClockVo> teachersClockVoList = new ArrayList<>();
+        ReturnMsg msg = new ReturnMsg();
+        String startDate = queryVo.getStartDate();
+        String endDate = queryVo.getEndDate();
+        String schoolId = getUser().getAgentId();
+        if (StringUtils.isEmpty(startDate)) {
+            startDate = DateUtils.getMonday(new Date(), 0);//获取当前日期周一所在的日期
+        }
+        if (StringUtils.isEmpty(endDate)) {
+            endDate = DateUtils.getMonday(new Date(), 6);//获取当前日期周日所在的日期
+        }
+        try {
+            //查询老师列表
+            Map<String, Object> scheduleQueryParam = new HashMap<>();
+            scheduleQueryParam.put("startDate", startDate);
+            scheduleQueryParam.put("endDate", endDate);
+            scheduleQueryParam.put("schoolId", schoolId);
+            //查询老师值班
+            List<Schedule> scheduleList = scheduleService.query(scheduleQueryParam);
+            Map<String, List<String>> teacherScheduleMap = new HashMap<>();
+            if (null != scheduleList && scheduleList.size() > 0) {
+                for (Schedule schedule : scheduleList) {
+                    if (StringUtils.isNotBlank(schedule.getUsers())) {
+                        String[] userArr = schedule.getUsers().split(",");
+                        for (String userId : userArr) {
+                            if (teacherScheduleMap.containsKey(userId)) {
+                                List<String> teacherScheduleList = teacherScheduleMap.get(userId);
+                                if (!teacherScheduleList.contains(schedule.getDutyDate())) {
+                                    teacherScheduleList.add(schedule.getDutyDate());
+                                }
+                            } else {
+                                List<String> teacherScheduleList = new ArrayList<>();
+                                teacherScheduleList.add(schedule.getDutyDate());
+                                teacherScheduleMap.put(userId, teacherScheduleList);
+                            }
+                        }
+                    }
+                }
+                //查询老师列表
+                Map<String, Object> inspectionCategoryQueryParam = new HashMap<>();
+                inspectionCategoryQueryParam.put("ilevel", 2);
+                inspectionCategoryQueryParam.put("templateIds", Arrays.asList(inspectionCategoryService.getTemplateIdByType(schoolId, "4"),
+                        inspectionCategoryService.getTemplateIdByType(schoolId, "5")));
+                inspectionCategoryQueryParam.put("schoolId", schoolId);
+                //查询分类
+                List<InspectionCategory> categoryList = inspectionCategoryService.queryByParam(inspectionCategoryQueryParam);
+                int categoryCount = 0;
+                if (null != categoryList) {
+                    categoryCount = categoryList.size();
+                }
+                //获取老师打卡信息
+                Map<String, Object> queryTeacherDutyParam = new HashMap<>();
+                queryTeacherDutyParam.put("startDate", startDate + " 00:00:00");
+                queryTeacherDutyParam.put("endDate", endDate + " 23:59:59");
+                queryTeacherDutyParam.put("schoolId", schoolId);
+                List<TeachersDutyVo> dutyVoList = inspectionMessageService.queryTeacherDutyList(queryTeacherDutyParam);
+                Map<String, Integer> teacherDutyMap = new HashMap<>();
+                if (null != dutyVoList && dutyVoList.size() > 0) {
+                    for (TeachersDutyVo currentVo : dutyVoList) {
+                        teacherDutyMap.put(currentVo.getUserId(), currentVo.getCount());
+                    }
+                }
+                for (String userId : teacherScheduleMap.keySet()) {
+                    List<String> dutyList = teacherScheduleMap.get(userId);
+                    UserInf userInfo = new UserInf();
+                    userInfo.setId(Integer.parseInt(userId));
+                    userInfo = userService.getEntity(userInfo);
+                    TeachersClockVo teachersClockVo = new TeachersClockVo();
+                    teachersClockVo.setTeacherName(userInfo.getUserName());
+                    teachersClockVo.setUserId(userId);
+                    Integer totalCount = dutyList.size() * categoryCount;
+                    Integer clockCount = teacherDutyMap.get(userId);
+                    if (null == clockCount) {
+                        clockCount = 0;
+                    }
+                    teachersClockVo.setTotalCount(totalCount);
+                    teachersClockVo.setClockCount(clockCount);
+                    teachersClockVo.setUnClockCount(totalCount - clockCount);
+                    teachersClockVoList.add(teachersClockVo);
+                }
+                //按老师名字排序
+                Collections.sort(teachersClockVoList, new Comparator<TeachersClockVo>() {
+                    @Override
+                    public int compare(TeachersClockVo o1, TeachersClockVo o2) {
+                        return o1.getTeacherName().compareTo(o1.getTeacherName());
+                    }
+                });
+            }
+            msg.setObj(teachersClockVoList);
+        } catch (Exception e) {
+            msg.setFail("查询失败");
+            InspectionMessageApiController.log.error("查询数据异常:{}", e.getMessage(), e);
+        }
+        return msg;
+    }
+
+    //打卡统计查询
+    @POST
+    @Path("/queryDKList")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
+    @ApiOperation(value = "打卡情况汇总", notes = "More notes about this method", response = ReturnMsg.class, httpMethod = "POST")
+    @ApiResponses(value = {@ApiResponse(message = "无数据", code = 200)})
+    public @ResponseBody
+    ReturnMsg queryDKList(TeachersClockQueryVo queryVo) {
+        ReturnMsg msg = new ReturnMsg();
+        String startDate = queryVo.getStartDate();
+        String endDate = queryVo.getEndDate();
+        String userId = queryVo.getUserId();
+        String schoolId = getUser().getAgentId();
+        //查询老师打卡列表
+        Map<String, Object> queryTeacherClockInfoParam = new HashMap<>();
+        queryTeacherClockInfoParam.put("startDate", startDate);
+        queryTeacherClockInfoParam.put("endDate", endDate);
+        queryTeacherClockInfoParam.put("schoolId", schoolId);
+        queryTeacherClockInfoParam.put("userId", userId);
+        try {
+            List<TeachersClockInfoVo> teachersClockInfoVoList = inspectionMessageService.queryTeacherClockInfoList(queryTeacherClockInfoParam);
+            if (null != teachersClockInfoVoList && teachersClockInfoVoList.size() > 0) {
+                //查询分类
+                Map<String, Object> inspectionCategoryQueryParam = new HashMap<>();
+                inspectionCategoryQueryParam.put("ilevel", 2);
+                inspectionCategoryQueryParam.put("templateIds", Arrays.asList(3, 4));
+                inspectionCategoryQueryParam.put("schoolId", schoolId);
+                List<InspectionCategory> categoryList = inspectionCategoryService.queryByParam(inspectionCategoryQueryParam);
+                Map<String, String> categoryMap = new HashMap<>();
+                if (null != categoryList && categoryList.size() > 0) {
+
+                    for (InspectionCategory inspectionCategory : categoryList) {
+                        String key = inspectionCategory.getTemplateId() + "-" + inspectionCategory.getValue();
+                        if (!categoryMap.containsKey(key)) {
+                            categoryMap.put(key, "(" + inspectionCategory.getStartTime() + "-" + inspectionCategory.getEndTime() + ")");
+                        }
+                    }
+                }
+                for (TeachersClockInfoVo teachersClockInfoVo : teachersClockInfoVoList) {
+                    String title = teachersClockInfoVo.getTitle();
+                    //todo 标题后缀移除待确认
+                    title = title.replaceAll("护校队巡查", "")
+                            .replaceAll("教师执勤", "");
+                    String category = title;
+                    if (title.indexOf("-") != -1) {
+                        category = title.split("-")[1];
+                    }
+                    String timeStr = categoryMap.get(inspectionCategoryService.getTemplateIdByType(schoolId, teachersClockInfoVo.getType() + "") + "-" + category);
+                    if (StringUtils.isNotBlank(timeStr)) {
+                        category += timeStr;
+                    }
+                    teachersClockInfoVo.setTitleDesc(category);
+                }
+            }
+            msg.setObj(teachersClockInfoVoList);
+        } catch (Exception e) {
+            msg.setFail("查询失败");
+            InspectionMessageApiController.log.error("查询数据异常:{}", e.getMessage(), e);
         }
         return msg;
     }

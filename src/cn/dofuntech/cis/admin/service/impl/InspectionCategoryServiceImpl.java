@@ -1,20 +1,20 @@
 package cn.dofuntech.cis.admin.service.impl;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import javax.annotation.Resource;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import cn.dofuntech.cis.admin.repository.domain.InspectionCategory;
 import cn.dofuntech.cis.admin.repository.mapper.InspectionCategoryMapper;
 import cn.dofuntech.cis.admin.service.InspectionCategoryService;
 import cn.dofuntech.core.service.impl.DunfengServiceImpl;
 import cn.dofuntech.core.util.DateUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -129,5 +129,24 @@ public class InspectionCategoryServiceImpl extends DunfengServiceImpl<Inspection
 
         }
 
+    }
+
+    @Override
+    public List<InspectionCategory> queryByParam(Map<String, Object> map) {
+        return inspectionCategoryMapper.queryByParam(map);
+    }
+
+    @Override
+    public String getTemplateIdByType(String schoolId, String type) {
+        if ("1".equals(schoolId)) {
+            if ("4".equals(type)) {
+                return "3";
+            }
+            if ("5".equals(type)) {
+                return "4";
+            }
+        }
+        //todo 需要补充其他学校的映射关系
+        return null;
     }
 }

@@ -1,20 +1,19 @@
 package cn.dofuntech.cis.admin.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import cn.dofuntech.cis.admin.repository.domain.Schedule;
 import cn.dofuntech.cis.admin.repository.mapper.ScheduleMapper;
 import cn.dofuntech.cis.admin.service.ScheduleService;
 import cn.dofuntech.core.service.impl.DunfengServiceImpl;
-import cn.dofuntech.cis.admin.repository.domain.Schedule;
 import cn.dofuntech.dfauth.bean.UserInf;
 import cn.dofuntech.dfauth.service.UserService;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -53,6 +52,11 @@ public class ScheduleServiceImpl extends DunfengServiceImpl<Schedule> implements
         }
 
         return userinfoList;
+    }
+
+    @Override
+    public List<Schedule> getScheduleListByParam(Map<String, Object> paramMap) {
+        return scheduleMapper.queryByMap(paramMap);
     }
 
 }

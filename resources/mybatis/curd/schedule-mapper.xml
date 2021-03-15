@@ -7,25 +7,28 @@
 			<if test="id != null and id != ''">
 			   t.id = #{id}
 			</if>
-			<if test="templateId != null and templateId != ''">
-			  and t.template_id = #{templateId}
-			</if>
-			<if test="users != null and users != ''">
-			  and t.users = #{users}
-			</if>
-			<if test="dutyDate != null and dutyDate != ''">
-			  and t.duty_date = #{dutyDate}
-			</if>
-			<if test="week != null and week != ''">
-			  and t.week = #{week}
-			</if>
-			<if test="addtime != null and addtime != ''">
-			  and t.addtime = #{addtime}
-			</if>
-			<if test="edittime != null and edittime != ''">
-			  and t.edittime = #{edittime}
-			</if>
-			<if test="schoolId != null and schoolId != ''">
+		<if test="templateId != null and templateId != ''">
+			and t.template_id = #{templateId}
+		</if>
+		<if test="users != null and users != ''">
+			and t.users = #{users}
+		</if>
+		<if test="dutyDate != null and dutyDate != ''">
+			and t.duty_date = #{dutyDate}
+		</if>
+		<if test="startDate != null and endDate != ''">
+			and t.duty_date BETWEEN #{startDate} and #{endDate}
+		</if>
+		<if test="week != null and week != ''">
+			and t.week = #{week}
+		</if>
+		<if test="addtime != null and addtime != ''">
+			and t.addtime = #{addtime}
+		</if>
+		<if test="edittime != null and edittime != ''">
+			and t.edittime = #{edittime}
+		</if>
+		<if test="schoolId != null and schoolId != ''">
 			  and t.school_id  = #{schoolId}
 			</if>
 			<if test="templateName != null and templateName != ''">

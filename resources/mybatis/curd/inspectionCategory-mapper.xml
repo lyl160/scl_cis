@@ -25,25 +25,31 @@
 			<if test="img != null and img != ''">
 			  and t.img = #{img}
 			</if>
-			<if test="status != null and status != ''">
-			  and t.status = #{status}
-			</if>
-			<if test="seq != null and seq != ''">
-			  and t.seq = #{seq}
-			</if>
-			<if test="templateId != null and templateId != ''">
-			  and t.template_id = #{templateId}
-			</if>
-			<if test="schoolId != null and schoolId != ''">
-			  and t.school_id = #{schoolId}
-			</if>
-			<if test="addTime != null and addTime != ''">
-			  and t.add_time = #{addTime}
-			</if>
-			<if test="editTime != null and editTime != ''">
-			  and t.edit_time = #{editTime}
-			</if>
-			<if test="startTime != null and startTime != ''">
+		<if test="status != null and status != ''">
+			and t.status = #{status}
+		</if>
+		<if test="seq != null and seq != ''">
+			and t.seq = #{seq}
+		</if>
+		<if test="templateId != null and templateId != ''">
+			and t.template_id = #{templateId}
+		</if>
+		<if test="templateIds != null and templateIds != ''">
+			and t.template_id in
+			<foreach collection="templateIds" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="schoolId != null and schoolId != ''">
+			and t.school_id = #{schoolId}
+		</if>
+		<if test="addTime != null and addTime != ''">
+			and t.add_time = #{addTime}
+		</if>
+		<if test="editTime != null and editTime != ''">
+			and t.edit_time = #{editTime}
+		</if>
+		<if test="startTime != null and startTime != ''">
 			  and t.start_time = #{startTime}
 			</if>
 			<if test="endTime != null and endTime != ''">
@@ -71,16 +77,30 @@
 	<select id="query" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
 		SELECT
 		<include refid="columns"/>,
-		tt.name AS  value1
+		tt.name AS value1
 		FROM t_inspection_category t
 		LEFT JOIN t_inspection_template tt on tt.id = t.template_id
 	</select>
 
 	<!-- 条件查询-->
-	<select id="queryByMap" parameterType="hashmap" resultType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
+	<select id="queryByParam" parameterType="hashmap"
+			resultType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
+		SELECT
+		<include refid="columns"/>
+		FROM t_inspection_category t
+		<where>
+			ilevel = 2
+			and t.template_id in (3,4)
+			and t.school_id = #{schoolId}
+		</where>
+	</select>
+
+	<!-- 条件查询-->
+	<select id="queryByMap" parameterType="hashmap"
+			resultType="cn.dofuntech.cis.admin.repository.domain.InspectionCategory">
 		SELECT
 		<include refid="columns"/>,
-		tt.name AS  value1,
+		tt.name AS value1,
 		ts.school_name AS schoolname
 		FROM t_inspection_category t
 		LEFT JOIN t_inspection_template tt on tt.id = t.template_id
