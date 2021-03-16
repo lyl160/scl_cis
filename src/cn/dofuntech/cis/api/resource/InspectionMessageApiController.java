@@ -709,8 +709,8 @@ public class InspectionMessageApiController extends BaseController {
         String schoolId = getUser().getAgentId();
         //查询老师打卡列表
         Map<String, Object> queryTeacherClockInfoParam = new HashMap<>();
-        queryTeacherClockInfoParam.put("startDate", startDate);
-        queryTeacherClockInfoParam.put("endDate", endDate);
+        queryTeacherClockInfoParam.put("startDate", startDate + " 00:00:00");
+        queryTeacherClockInfoParam.put("endDate", endDate + " 23:59:59");
         queryTeacherClockInfoParam.put("schoolId", schoolId);
         queryTeacherClockInfoParam.put("userId", userId);
         try {
