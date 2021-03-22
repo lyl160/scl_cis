@@ -113,8 +113,14 @@
                     name: '', index: '', width: '20%',
                     formatter: function (cellvalue, options, rowObject) {
                         var title = rowObject.title;
-                        var titleArray = title.split("-");
-                        return titleArray[1].replace("后勤巡查反馈", '').replace("校务巡查反馈", '').replace("校务巡查", '');
+                        if (rowObject.type == 6) {
+                            return title;
+                        } else {
+                            var titleArray = title.split("-");
+                            return titleArray[1].replace("校务巡查反馈", '').replace("校务巡查", '');
+                        }
+
+
                     }
                 },
                 {name: 'remark', index: 'remark', width: '20%'},

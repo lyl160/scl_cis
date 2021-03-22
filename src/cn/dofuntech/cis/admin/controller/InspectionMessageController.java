@@ -173,6 +173,7 @@ public class InspectionMessageController extends AdminController<InspectionMessa
             if (!uai.getRoleId().equals("9")) {
                 params.put("schoolId", uai.getAgentId());
             }
+            params.put("notin45", "true");
             List<InspectionMessage> msgMappings = inspectionMessageService.query(params);
             //构造标题
             List<String> headers = new ArrayList<String>();
@@ -199,10 +200,14 @@ public class InspectionMessageController extends AdminController<InspectionMessa
                 } else if (type == 6) {
                     typeDesc = "后勤巡查反馈";
                 }
-                String[] titleArray = bm.getTitle().split("-");
                 String title = null;
-                if (titleArray.length >= 2) {
-                    title = titleArray[1].replace("后勤巡查反馈", "").replace("校务巡查反馈", "").replace("校务巡查", "");
+                if (type == 6) {
+                    title = "后勤巡查反馈";
+                } else {
+                    String[] titleArray = bm.getTitle().split("-");
+                    if (titleArray.length >= 2) {
+                        title = titleArray[1].replace("校务巡查反馈", "").replace("校务巡查", "");
+                    }
                 }
                 xdata_temp.add(typeDesc);
                 xdata_temp.add(title);
